@@ -1,0 +1,95 @@
+import { GearItem } from '../game/types';
+
+export const GEAR_CATALOG: GearItem[] = [
+  // 鱼竿
+  {
+    id: 'rod_3_6m',
+    name: '3.6m Hand Rod',
+    nameCn: '3.6米手竿',
+    type: 'rod',
+    description: '短竿，适合近距离钓小型鱼，操控性好。新手入门首选。',
+    stats: { length: 3.6, power: 2, sensitivity: 9 },
+  },
+  {
+    id: 'rod_4_5m',
+    name: '4.5m Hand Rod',
+    nameCn: '4.5米手竿',
+    type: 'rod',
+    description: '中等长度手竿，兼顾远近，是最常用的钓竿长度。',
+    stats: { length: 4.5, power: 4, sensitivity: 7 },
+  },
+  {
+    id: 'rod_5_4m',
+    name: '5.4m Hand Rod',
+    nameCn: '5.4米手竿',
+    type: 'rod',
+    description: '长竿，可以钓更远的钓点，适合大水面作战。',
+    stats: { length: 5.4, power: 6, sensitivity: 5 },
+  },
+  {
+    id: 'rod_lure',
+    name: 'Lure Rod',
+    nameCn: '路亚竿',
+    type: 'rod',
+    description: '专为路亚钓法设计的短竿，配合水滴轮或纺车轮使用。',
+    stats: { length: 2.1, power: 7, sensitivity: 8 },
+  },
+  {
+    id: 'rod_heavy',
+    name: 'Heavy Power Rod',
+    nameCn: '巨物竿',
+    type: 'rod',
+    description: '专门用来钓大鱼的重型竿，腰力十足，能应对几十斤的大鱼。',
+    stats: { length: 5.4, power: 10, sensitivity: 3 },
+  },
+  // 鱼线
+  {
+    id: 'line_1',
+    name: '1# Main Line',
+    nameCn: '1号主线',
+    type: 'line',
+    description: '细线，适合钓小型鱼。灵敏度高但拉力有限。',
+    stats: { diameter: 0.165, strength: 3, sensitivity: 10 },
+  },
+  {
+    id: 'line_2',
+    name: '2# Main Line',
+    nameCn: '2号主线',
+    type: 'line',
+    description: '通用线径，鲫鲤兼顾。最常用的主线号数。',
+    stats: { diameter: 0.234, strength: 5, sensitivity: 7 },
+  },
+  {
+    id: 'line_4',
+    name: '4# Main Line',
+    nameCn: '4号主线',
+    type: 'line',
+    description: '较粗线径，适合钓大鱼。牺牲灵敏度换取拉力。',
+    stats: { diameter: 0.331, strength: 8, sensitivity: 4 },
+  },
+  // 鱼钩
+  {
+    id: 'hook_crucian',
+    name: 'Crucian Hook #4',
+    nameCn: '袖钩4号',
+    type: 'hook',
+    description: '细条钩，适合钓鲫鱼等小型鱼。钩条细、穿透力强。',
+    stats: { size: 4, sharpness: 9, strength: 3 },
+  },
+  {
+    id: 'hook_iseama',
+    name: 'Iseama Hook #5',
+    nameCn: '伊势尼5号',
+    type: 'hook',
+    description: '万能钩型，钩门宽、钩底深，适合多种鱼类。',
+    stats: { size: 5, sharpness: 7, strength: 7 },
+  },
+  {
+    id: 'hook_giant',
+    name: 'Iseama Hook #10',
+    nameCn: '伊势尼10号',
+    type: 'hook',
+    description: '大号钩，专门用来钓大鱼。钩条粗壮，不易被拉开。',
+    stats: { size: 10, sharpness: 6, strength: 10 },
+  },
+];

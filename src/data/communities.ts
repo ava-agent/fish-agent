@@ -1,0 +1,123 @@
+import { CommunityItem, FishingSpot } from '../game/types';
+
+export const COMMUNITIES: CommunityItem[] = [
+  {
+    id: 'fishing_bar',
+    name: '钓鱼吧',
+    type: 'forum',
+    description: '百度贴吧最大的钓鱼社区，钓友分享钓获、交流经验的热门平台。',
+    url: 'https://tieba.baidu.com/f?kw=%E9%92%93%E9%B1%BC',
+    features: ['钓获分享', '钓技交流', '钓具评测', '钓点推荐'],
+  },
+  {
+    id: 'diao_yu_ren',
+    name: '钓鱼人',
+    type: 'app',
+    description: '专业的钓鱼社交 APP，提供钓鱼资讯、天气查询、钓友互动等功能。',
+    url: 'https://www.diaoyuren.com',
+    features: ['实时天气', '钓鱼日记', '钓友社交', '赛事资讯'],
+  },
+  {
+    id: 'xi_diao_wang',
+    name: '西钓网',
+    type: 'website',
+    description: '综合性钓鱼门户网站，内容丰富，涵盖钓鱼技巧、渔具评测等。',
+    url: 'https://www.xidiao.com',
+    features: ['钓鱼技巧', '渔具评测', '视频教程', '论坛交流'],
+  },
+  {
+    id: 'hua_shi_lu_ya',
+    name: '化氏路亚',
+    type: 'wechat',
+    description: '化绍新团队的路亚钓鱼公众号，分享路亚钓法技巧和赛事。',
+    features: ['路亚技巧', '赛事报道', '拟饵推荐', '视频教学'],
+  },
+  {
+    id: 'tian_yuan_diao_yu',
+    name: '天元钓鱼',
+    type: 'wechat',
+    description: '天元品牌钓鱼公众号，邓刚等名师的钓鱼教学内容。',
+    features: ['大师教学', '直播钓鱼', '产品资讯', '钓鱼技巧'],
+  },
+  {
+    id: 'fishing_planet',
+    name: 'Fishing Planet',
+    type: 'app',
+    description: '全球知名的钓鱼模拟游戏，画面逼真，鱼种丰富。（参考学习）',
+    url: 'https://fishingplanet.com',
+    features: ['逼真模拟', '全球水域', '多人竞技', '装备系统'],
+  },
+];
+
+export const FISHING_SPOTS: FishingSpot[] = [
+  {
+    id: 'spot_reservoir',
+    name: '城郊水库',
+    location: '适用于大部分城市周边',
+    fishTypes: ['common_carp', 'grass_carp', 'crucian_carp', 'silver_carp'],
+    difficulty: 2,
+    description: '水库是最常见的钓鱼场所，水面开阔，鱼种丰富，大鱼几率高。',
+    tips: [
+      '选择水库的库湾和回水处作为钓位',
+      '春天选浅水区，夏天选深水区',
+      '水库鱼警惕性高，窝料要提前打',
+      '注意安全，库边可能湿滑',
+    ],
+  },
+  {
+    id: 'spot_pond',
+    name: '村边鱼塘',
+    location: '乡村地区',
+    fishTypes: ['crucian_carp', 'common_carp', 'tilapia', 'catfish'],
+    difficulty: 1,
+    description: '养殖鱼塘或自然鱼塘，鱼密度大，适合新手练习。有些需要付费。',
+    tips: [
+      '鱼塘鱼密度大，建议用细线组',
+      '饵料不要太重，清淡为主',
+      '尊重塘主的规则，注意是否限竿限时',
+      '适合练习基本功和调漂技术',
+    ],
+  },
+  {
+    id: 'spot_river',
+    name: '河流野钓',
+    location: '各地河流',
+    fishTypes: ['crucian_carp', 'catfish', 'yellow_catfish', 'mandarin_fish', 'snakehead'],
+    difficulty: 3,
+    description: '自然河流钓鱼，鱼种未知带来惊喜。水流和地形增加了挑战性。',
+    tips: [
+      '选择水流较缓的弯道内侧',
+      '桥墩、闸口附近是好钓位',
+      '注意水位变化和安全',
+      '河流鱼比较野，线组可以粗一些',
+    ],
+  },
+  {
+    id: 'spot_black_pit',
+    name: '黑坑（收费塘）',
+    location: '城市郊区',
+    fishTypes: ['crucian_carp', 'common_carp', 'largemouth_bass'],
+    difficulty: 3,
+    description: '商业收费钓场，定期放鱼，钓友竞技性强。讲究饵料配方和技术。',
+    tips: [
+      '了解塘里放了什么鱼，针对性选择饵料',
+      '黑坑鱼可能有回锅鱼，口轻要用细线',
+      '注意观察其他钓友的用饵和钓位',
+      '掌握"正钓"和"偷驴"的不同策略',
+    ],
+  },
+  {
+    id: 'spot_sea',
+    name: '海边矶钓',
+    location: '沿海城市',
+    fishTypes: ['largemouth_bass'],
+    difficulty: 4,
+    description: '在海边礁石上进行的钓鱼活动，可以钓到海鱼。风景优美但有一定危险性。',
+    tips: [
+      '必须穿救生衣和防滑鞋',
+      '注意潮汐变化，涨潮时及时撤离',
+      '海钓用饵以虾仁、沙蚕为主',
+      '海水腐蚀性强，钓具用后要清洗',
+    ],
+  },
+];
