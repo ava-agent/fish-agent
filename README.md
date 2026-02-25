@@ -2,6 +2,18 @@
 
 一款面向钓鱼爱好者的像素风移动端趣味应用，集钓鱼模拟、百科图鉴、社区推荐、钓鱼日记于一体。
 
+**在线体验**: [https://fish-agent.vercel.app](https://fish-agent.vercel.app)
+
+## 应用截图
+
+| 钓鱼模拟 | 钓鱼百科 |
+|:---:|:---:|
+| ![钓鱼模拟](screenshots/fishing.png) | ![钓鱼百科](screenshots/encyclopedia.png) |
+
+| 钓鱼社区 | 钓鱼记录 |
+|:---:|:---:|
+| ![钓鱼社区](screenshots/community.png) | ![钓鱼记录](screenshots/records.png) |
+
 ## 功能模块
 
 ### 1. 模拟钓鱼 (首页)
@@ -49,6 +61,7 @@
 fish-agent/
 ├── app/                          # Expo Router 文件路由
 │   ├── _layout.tsx               # 根布局
+│   ├── +html.tsx                 # 自定义 HTML 模板
 │   └── (tabs)/
 │       ├── _layout.tsx           # Tab 导航 (4 个 Tab)
 │       ├── index.tsx             # 钓鱼模拟游戏
@@ -72,6 +85,7 @@ fish-agent/
 │   ├── theme/                    # 主题 (颜色/间距/字体)
 │   └── utils/supabase.ts        # Supabase 客户端
 ├── supabase/migrations/          # 数据库迁移脚本
+├── babel.config.js               # Babel 配置 (import.meta 转换)
 ├── vercel.json                   # Vercel 部署配置
 └── app.json                      # Expo 配置
 ```

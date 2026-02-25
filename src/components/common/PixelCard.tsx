@@ -29,10 +29,7 @@ const styles = StyleSheet.create({
     borderColor: PIXEL_COLORS.uiBorder,
     borderRadius: 0,
     padding: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 3, height: 3 },
-    shadowOpacity: 0.3,
-    shadowRadius: 0,
+    boxShadow: '3px 3px 0px rgba(0, 0, 0, 0.3)',
     elevation: 2,
   },
 });

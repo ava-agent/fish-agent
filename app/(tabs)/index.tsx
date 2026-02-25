@@ -59,7 +59,7 @@ function WaterWaves() {
       Animated.timing(waveAnim, {
         toValue: 1,
         duration: 3000,
-        useNativeDriver: true,
+        useNativeDriver: Platform.OS !== 'web',
       })
     );
     loop.start();
@@ -100,8 +100,8 @@ function Bobber({ visible, bite }: { visible: boolean; bite: boolean }) {
     if (visible && !bite) {
       const loop = Animated.loop(
         Animated.sequence([
-          Animated.timing(bounceAnim, { toValue: -6, duration: 1000, useNativeDriver: true }),
-          Animated.timing(bounceAnim, { toValue: 6, duration: 1000, useNativeDriver: true }),
+          Animated.timing(bounceAnim, { toValue: -6, duration: 1000, useNativeDriver: Platform.OS !== 'web' }),
+          Animated.timing(bounceAnim, { toValue: 6, duration: 1000, useNativeDriver: Platform.OS !== 'web' }),
         ])
       );
       loop.start();
@@ -117,9 +117,9 @@ function Bobber({ visible, bite }: { visible: boolean; bite: boolean }) {
   useEffect(() => {
     if (bite) {
       Animated.sequence([
-        Animated.timing(biteAnim, { toValue: 20, duration: 150, useNativeDriver: true }),
-        Animated.timing(biteAnim, { toValue: 5, duration: 200, useNativeDriver: true }),
-        Animated.timing(biteAnim, { toValue: 18, duration: 100, useNativeDriver: true }),
+        Animated.timing(biteAnim, { toValue: 20, duration: 150, useNativeDriver: Platform.OS !== 'web' }),
+        Animated.timing(biteAnim, { toValue: 5, duration: 200, useNativeDriver: Platform.OS !== 'web' }),
+        Animated.timing(biteAnim, { toValue: 18, duration: 100, useNativeDriver: Platform.OS !== 'web' }),
       ]).start();
     } else {
       biteAnim.setValue(0);
@@ -602,7 +602,7 @@ const styles = StyleSheet.create({
   sun: {
     position: 'absolute', right: 50, top: 30, width: 40, height: 40,
     backgroundColor: PIXEL_COLORS.sunGlow,
-    shadowColor: PIXEL_COLORS.sunGlow, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.8, shadowRadius: 20,
+    boxShadow: `0px 0px 20px ${PIXEL_COLORS.sunGlow}CC`,
   },
   cloud: { position: 'absolute', width: 60, height: 20, backgroundColor: '#FFFFFF88' },
   shore: { height: 50, backgroundColor: PIXEL_COLORS.envGrass, flexDirection: 'row', overflow: 'hidden' },

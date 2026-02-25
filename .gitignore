@@ -41,9 +41,11 @@ yarn-error.*
 /ios
 /android
 
-# test screenshots
+# test screenshots (keep screenshots/ directory)
 *.png
 !assets/**/*.png
+!screenshots/**/*.png
 
 # Playwright
 .playwright-mcp/
+.vercel

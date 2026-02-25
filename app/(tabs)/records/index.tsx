@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
     backgroundColor: PIXEL_COLORS.uiHighlight,
     justifyContent: 'center', alignItems: 'center',
     borderWidth: 3, borderColor: PIXEL_COLORS.uiBorder,
-    shadowColor: '#000', shadowOffset: { width: 3, height: 3 }, shadowOpacity: 0.5, shadowRadius: 0,
+    boxShadow: '3px 3px 0px rgba(0, 0, 0, 0.5)',
     elevation: 5,
   },
 });
