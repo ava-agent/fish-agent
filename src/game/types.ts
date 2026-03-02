@@ -1,4 +1,4 @@
-export type GamePhase = 'idle' | 'casting' | 'waiting' | 'bite' | 'fighting' | 'caught' | 'escaped';
+export type GamePhase = 'idle' | 'casting' | 'waiting' | 'bite' | 'fighting' | 'caught' | 'escaped' | 'no_bite';
 
 export type FishRarity = 'common' | 'uncommon' | 'rare' | 'legendary';
 export type FishCategory = 'freshwater' | 'saltwater' | 'pond';

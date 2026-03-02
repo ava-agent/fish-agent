@@ -9,6 +9,7 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PIXEL_COLORS } from '../../src/theme/colors';
 import { PixelText } from '../../src/components/common/PixelText';
 import { PixelButton } from '../../src/components/common/PixelButton';
@@ -18,6 +19,8 @@ import { useFishDexStore } from '../../src/stores/useFishDexStore';
 import { FISH_SPECIES } from '../../src/data/fish-species';
 import { BAITS } from '../../src/data/baits';
 import { FishSpecies } from '../../src/game/types';
+
+const TUTORIAL_SHOWN_KEY = '@fishing_tutorial_shown';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const GAME_HEIGHT = SCREEN_HEIGHT - 140;
@@ -150,18 +153,22 @@ function TensionMeter({ tension }: { tension: number }) {
     : PIXEL_COLORS.uiDanger;
 
   const label =
-    tension < 0.2 ? '太松了！'
-    : tension < 0.3 ? '松弛'
+    tension < 0.15 ? '要跑了！'
+    : tension < 0.3 ? '太松'
     : tension < 0.7 ? '完美！'
-    : tension < 0.85 ? '小心！'
-    : '快断了！！';
+    : tension < 0.85 ? '危险！'
+    : '快断！';
 
   return (
     <View style={styles.tensionContainer}>
       <PixelText variant="caption" color={PIXEL_COLORS.uiText}>线张力</PixelText>
       <View style={styles.tensionBar}>
+        {/* Danger zone - too slack */}
+        <View style={[styles.tensionZone, styles.tensionZoneSlack]} />
+        {/* Sweet spot zone */}
+        <View style={[styles.tensionZone, styles.tensionZoneSweet]} />
+        {/* Tension fill */}
         <View style={[styles.tensionFill, { width: `${tension * 100}%`, backgroundColor: color }]} />
-        <View style={styles.tensionOptimal} />
       </View>
       <PixelText variant="caption" color={color}>{label}</PixelText>
     </View>
@@ -302,6 +309,39 @@ function PowerMeter({ power, active }: { power: number; active: boolean }) {
   );
 }
 
+function TutorialOverlay({ onClose }: { onClose: () => void }) {
+  return (
+    <View style={styles.tutorialOverlay}>
+      <View style={styles.tutorialCard}>
+        <PixelText variant="title" style={{ marginBottom: 12 }}>钓鱼指南</PixelText>
+
+        <View style={styles.tutorialStep}>
+          <PixelText variant="subtitle" color={PIXEL_COLORS.uiHighlight}>1. 选饵</PixelText>
+          <PixelText variant="body">点击底部鱼饵按钮选择适合的鱼饵</PixelText>
+        </View>
+
+        <View style={styles.tutorialStep}>
+          <PixelText variant="subtitle" color={PIXEL_COLORS.uiHighlight}>2. 抛竿</PixelText>
+          <PixelText variant="body">按住"按此蓄力抛竿"按钮蓄力，松开抛出</PixelText>
+        </View>
+
+        <View style={styles.tutorialStep}>
+          <PixelText variant="subtitle" color={PIXEL_COLORS.uiHighlight}>3. 上钩</PixelText>
+          <PixelText variant="body">浮漂剧烈晃动时，点击"设钩！"提竿</PixelText>
+        </View>
+
+        <View style={styles.tutorialStep}>
+          <PixelText variant="subtitle" color={PIXEL_COLORS.uiHighlight}>4. 遛鱼</PixelText>
+          <PixelText variant="body">在圆圈内画圈收线，保持张力在绿色区域</PixelText>
+          <PixelText variant="caption" color={PIXEL_COLORS.uiTextDim}>太松鱼会跑，太紧线会断！</PixelText>
+        </View>
+
+        <PixelButton title="开始钓鱼" onPress={onClose} style={{ marginTop: 16 }} />
+      </View>
+    </View>
+  );
+}
+
 export default function FishingScreen() {
   const {
     phase, selectedBait, currentFish, lineTension, fishStamina,
@@ -318,19 +358,36 @@ export default function FishingScreen() {
   const [swimmingFish, setSwimmingFish] = useState<
     { fish: FishSpecies; x: number; y: number; dx: number }[]
   >([]);
+  const [showTutorial, setShowTutorial] = useState(false);
+
+  // Check if tutorial should be shown
+  useEffect(() => {
+    AsyncStorage.getItem(TUTORIAL_SHOWN_KEY).then((shown) => {
+      if (!shown) {
+        setShowTutorial(true);
+      }
+    });
+  }, []);
+
+  const closeTutorial = useCallback(() => {
+    setShowTutorial(false);
+    AsyncStorage.setItem(TUTORIAL_SHOWN_KEY, 'true');
+  }, []);
 
   const powerInterval = useRef<ReturnType<typeof setInterval> | null>(null);
   const gameLoop = useRef<ReturnType<typeof setInterval> | null>(null);
   const biteTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hookTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const powerDir = useRef(1);
+  const castPowerRef = useRef(0);
 
   useEffect(() => {
-    const fish = FISH_SPECIES.slice(0, 5).map((f) => ({
+    // Show all 12 fish species swimming in the water
+    const fish = FISH_SPECIES.map((f) => ({
       fish: f,
       x: Math.random() * (SCREEN_WIDTH - 60),
       y: GAME_HEIGHT * 0.55 + Math.random() * (GAME_HEIGHT * 0.35),
-      dx: (Math.random() > 0.5 ? 1 : -1) * (0.3 + Math.random() * 0.5),
+      dx: (Math.random() > 0.5 ? 1 : -1) * (0.2 + Math.random() * 0.4),
     }));
     setSwimmingFish(fish);
   }, []);
@@ -356,12 +413,14 @@ export default function FishingScreen() {
     setIsCasting(true);
     setPhase('casting');
     setCastPower(0);
+    castPowerRef.current = 0;
     powerDir.current = 1;
     powerInterval.current = setInterval(() => {
       setCastPower((prev) => {
         let next = prev + powerDir.current * 0.02;
         if (next >= 1) { next = 1; powerDir.current = -1; }
         else if (next <= 0) { next = 0; powerDir.current = 1; }
+        castPowerRef.current = next;
         return next;
       });
     }, 16);
@@ -370,10 +429,11 @@ export default function FishingScreen() {
   const releaseCast = useCallback(() => {
     if (powerInterval.current) { clearInterval(powerInterval.current); powerInterval.current = null; }
     setIsCasting(false);
-    cast(castPower);
+    const power = castPowerRef.current;
+    cast(power);
 
     const baitObj = BAITS.find((b) => b.id === selectedBait);
-    const baseWait = 3000 + Math.random() * 8000;
+    const baseWait = 3000 + Math.random() * 5000;
 
     biteTimeout.current = setTimeout(() => {
       const candidates = FISH_SPECIES.filter((fish) => {
@@ -389,10 +449,16 @@ export default function FishingScreen() {
           if (useGameStore.getState().phase === 'bite') fishEscaped();
         }, 2500);
       } else {
-        setPhase('idle');
+        // No fish attracted - show feedback then reset
+        setPhase('no_bite');
+        setTimeout(() => {
+          if (useGameStore.getState().phase === 'no_bite') {
+            setPhase('idle');
+          }
+        }, 2000);
       }
     }, baseWait * 0.8);
-  }, [castPower, selectedBait, cast, setPhase, setCurrentFish, fishEscaped]);
+  }, [selectedBait, cast, setPhase, setCurrentFish, fishEscaped]);
 
   const handleHookSet = useCallback(() => {
     if (phase !== 'bite') return;
@@ -408,19 +474,30 @@ export default function FishingScreen() {
       const fish = state.currentFish;
       if (!fish) return;
 
-      // Fish pulls based on strength and remaining stamina
-      const fishPull = fish.fightStrength * state.fishStamina * (0.5 + Math.random() * 0.5);
-      const reelPull = state.reelSpeed * 0.6;
-      // Tension changes faster for responsive gameplay (~15-30s fights)
-      const tensionDelta = (reelPull - fishPull * 0.3) * 0.12;
-      // Natural tension decay toward 0.4 when idle (prevents instant line break)
-      const naturalDecay = (0.4 - state.lineTension) * 0.02;
-      const newTension = state.lineTension + tensionDelta + naturalDecay;
+      // Fish pulls based on strength and remaining stamina (random bursts)
+      const fishPull = fish.fightStrength * state.fishStamina * (0.3 + Math.random() * 0.7);
+      const reelPull = state.reelSpeed * 0.8;
+
+      // Tension increases with reeling, decreases from fish pulling and natural slack
+      // Without reeling: tension drops (line goes slack → fish escapes)
+      // With reeling: tension rises (too much → line breaks)
+      const tensionDelta = (reelPull - fishPull * 0.4) * 0.15;
+      // Natural decay toward 0 (slack) — must actively reel to maintain tension
+      const slackDecay = -state.lineTension * 0.03;
+      const newTension = Math.max(0, Math.min(1, state.lineTension + tensionDelta + slackDecay));
       updateTension(newTension);
 
-      // Stamina drains when tension is in the effective zone (0.3-0.8)
-      const effectiveTension = Math.max(0, Math.min(1, (state.lineTension - 0.2) * 1.5));
-      const staminaDrain = effectiveTension * 0.025;
+      // Stamina drains only when tension is in the sweet spot (0.3-0.7)
+      let staminaDrain = 0;
+      if (newTension >= 0.3 && newTension <= 0.7) {
+        // Perfect zone: maximum drain
+        staminaDrain = 0.02 * (1 + fish.difficulty * 0.1);
+      } else if (newTension > 0.7 && newTension < 0.85) {
+        // High tension: some drain but risky
+        staminaDrain = 0.01;
+      }
+      // Below 0.3 or above 0.85: no stamina drain (fish rests or line about to break)
+
       updateFishStamina(state.fishStamina - staminaDrain);
 
       if (state.fishStamina - staminaDrain <= 0) {
@@ -430,7 +507,12 @@ export default function FishingScreen() {
         setIsNewDiscovery(!isDiscovered(fish.id));
         discoverFish(fish.id, weight);
         catchFish();
-      } else if (newTension >= 1 || newTension <= 0.05) {
+      } else if (newTension >= 1) {
+        // Line breaks!
+        if (gameLoop.current) clearInterval(gameLoop.current);
+        fishEscaped();
+      } else if (newTension <= 0.1 && state.reelSpeed < 0.1) {
+        // Line too slack and not reeling — fish unhooks
         if (gameLoop.current) clearInterval(gameLoop.current);
         fishEscaped();
       }
@@ -443,12 +525,13 @@ export default function FishingScreen() {
       onMoveShouldSetPanResponder: () => true,
       onPanResponderGrant: () => {
         if (useGameStore.getState().phase === 'fighting') {
-          useGameStore.setState({ reelSpeed: 0.5 });
+          useGameStore.setState({ reelSpeed: 0.4 });
         }
       },
       onPanResponderMove: (_, gesture) => {
         if (useGameStore.getState().phase === 'fighting') {
-          const speed = Math.min(1, Math.sqrt(gesture.vx ** 2 + gesture.vy ** 2) * 0.3);
+          // Speed based on finger movement velocity — faster swipes = faster reeling
+          const speed = Math.min(1, Math.sqrt(gesture.vx ** 2 + gesture.vy ** 2) * 0.4 + 0.2);
           useGameStore.setState({ reelSpeed: speed });
         }
       },
@@ -555,6 +638,13 @@ export default function FishingScreen() {
           </View>
         )}
 
+        {phase === 'no_bite' && (
+          <View style={styles.centerMessage}>
+            <PixelText variant="subtitle" color={PIXEL_COLORS.uiTextDim}>没有鱼上钩...</PixelText>
+            <PixelText variant="caption" style={{ marginTop: 4 }}>换个鱼饵试试？</PixelText>
+          </View>
+        )}
+
         {phase === 'bite' && (
           <TouchableOpacity style={styles.biteOverlay} onPress={handleHookSet} activeOpacity={0.8}>
             <View style={styles.biteAlert}>
@@ -590,6 +680,9 @@ export default function FishingScreen() {
           <CatchResultOverlay fish={currentFish} weight={caughtWeight} isNewDiscovery={isNewDiscovery} onContinue={handleContinue} />
         )}
         {phase === 'escaped' && <EscapeOverlay onContinue={handleContinue} />}
+
+        {/* Tutorial overlay for new players */}
+        {showTutorial && <TutorialOverlay onClose={closeTutorial} />}
       </SafeAreaView>
     </View>
   );
@@ -636,9 +729,27 @@ const styles = StyleSheet.create({
   biteAlert: { backgroundColor: PIXEL_COLORS.uiBg + 'EE', padding: 32, borderWidth: 4, borderColor: PIXEL_COLORS.uiHighlight },
   fightUI: { position: 'absolute', bottom: 80, left: 16, right: 16, backgroundColor: PIXEL_COLORS.uiBg + 'DD', padding: 12, borderWidth: 2, borderColor: PIXEL_COLORS.uiBorder },
   tensionContainer: { marginBottom: 8 },
-  tensionBar: { width: '100%', height: 16, backgroundColor: PIXEL_COLORS.uiBg, borderWidth: 2, borderColor: PIXEL_COLORS.uiBorder, marginVertical: 4, overflow: 'hidden' },
+  tensionBar: { width: '100%', height: 16, backgroundColor: PIXEL_COLORS.uiBg, borderWidth: 2, borderColor: PIXEL_COLORS.uiBorder, marginVertical: 4, overflow: 'hidden', position: 'relative' },
   tensionFill: { height: '100%' },
-  tensionOptimal: { position: 'absolute', left: '30%', width: '40%', height: '100%', borderLeftWidth: 1, borderRightWidth: 1, borderColor: PIXEL_COLORS.uiSuccess + '66' },
+  tensionZone: {
+    position: 'absolute',
+    height: '100%',
+  },
+  tensionZoneSlack: {
+    left: 0,
+    width: '15%',
+    backgroundColor: PIXEL_COLORS.uiInfo + '33',
+    borderRightWidth: 1,
+    borderColor: PIXEL_COLORS.uiInfo,
+  },
+  tensionZoneSweet: {
+    left: '30%',
+    width: '40%',
+    backgroundColor: PIXEL_COLORS.uiSuccess + '22',
+    borderLeftWidth: 2,
+    borderRightWidth: 2,
+    borderColor: PIXEL_COLORS.uiSuccess,
+  },
   staminaContainer: { marginBottom: 4 },
   staminaBar: { width: '100%', height: 12, backgroundColor: PIXEL_COLORS.uiBg, borderWidth: 2, borderColor: PIXEL_COLORS.uiBorder, marginVertical: 4, overflow: 'hidden' },
   staminaFill: { height: '100%' },
@@ -652,4 +763,7 @@ const styles = StyleSheet.create({
   catchStats: { flexDirection: 'row', justifyContent: 'space-around', marginTop: 12, paddingVertical: 8, borderTopWidth: 2, borderTopColor: PIXEL_COLORS.uiBorder },
   catchStat: { alignItems: 'center' },
   tipBox: { marginTop: 8, padding: 8, backgroundColor: PIXEL_COLORS.uiBg, borderWidth: 1, borderColor: PIXEL_COLORS.uiInfo + '44' },
+  tutorialOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center', backgroundColor: '#000000AA', padding: 20 },
+  tutorialCard: { width: '100%', maxWidth: 340, backgroundColor: PIXEL_COLORS.uiPanel, padding: 20, borderWidth: 4, borderColor: PIXEL_COLORS.uiHighlight },
+  tutorialStep: { marginBottom: 12, paddingLeft: 8, borderLeftWidth: 3, borderLeftColor: PIXEL_COLORS.uiHighlight },
 });

@@ -92,5 +92,10 @@ export const useGameStore = create<GameStore>((set) => ({
 
   fishEscaped: () => set({ phase: 'escaped', currentFish: null }),
 
-  reset: () => set({ ...initialState }),
+  reset: () => set((state) => ({
+    ...initialState,
+    score: state.score,
+    totalCatches: state.totalCatches,
+    selectedBait: state.selectedBait,
+  })),
 }));
