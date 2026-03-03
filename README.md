@@ -1,8 +1,27 @@
 # 钓鱼佬 - 像素风钓鱼模拟游戏
 
+[![Expo](https://img.shields.io/badge/Expo-54-black?logo=expo)](https://expo.dev)
+[![React Native](https://img.shields.io/badge/React%20Native-0.76-blue?logo=react)](https://reactnative.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?logo=typescript)](https://www.typescriptlang.org/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
 一款面向钓鱼爱好者的像素风移动端趣味应用，集钓鱼模拟、百科图鉴、社区推荐、钓鱼日记于一体。
 
 **在线体验**: [https://fish-agent.vercel.app](https://fish-agent.vercel.app)
+
+## 快速开始
+
+```bash
+# 克隆项目
+git clone https://github.com/ava-agent/fish-agent.git
+cd fish-agent
+
+# 安装依赖
+npm install
+
+# 启动 Web 版本
+npx expo start --web
+```
 
 ## 应用截图
 
@@ -202,6 +221,54 @@ React Native Web 不支持 `useNativeDriver`，代码中已使用 `Platform.OS !
 - 修复：抛竿蓄力值不再丢失
 - 优化：现在所有 12 种鱼都会出现在水中
 - 优化：没有鱼上钩时显示提示信息
+
+### v1.0.0
+- 初始版本发布
+- 完整钓鱼模拟游戏
+- 12 种鱼种图鉴
+- 6 种鱼饵系统
+- 钓鱼日记记录功能
+
+## 数据模型
+
+### 游戏状态 (useGameStore)
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| phase | GamePhase | 游戏阶段 |
+| currentFish | FishSpecies | 当前上钩的鱼 |
+| lineTension | number | 线张力 (0-1) |
+| fishStamina | number | 鱼体力 (0-1) |
+| reelSpeed | number | 收线速度 (0-1) |
+| score | number | 累计分数 |
+| totalCatches | number | 累计钓获数 |
+
+### 图鉴状态 (useFishDexStore)
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| entries | FishDexEntry[] | 图鉴条目列表 |
+| discoveredCount | number | 已发现鱼种数 |
+
+## 贡献指南
+
+欢迎贡献代码、报告问题或提出建议！
+
+1. Fork 本仓库
+2. 创建功能分支 (`git checkout -b feature/amazing-feature`)
+3. 提交更改 (`git commit -m 'feat: 添加某个功能'`)
+4. 推送到分支 (`git push origin feature/amazing-feature`)
+5. 创建 Pull Request
+
+### 代码规范
+
+- 使用 TypeScript 编写代码
+- 遵循现有的代码风格
+- 添加必要的注释
+
+## 技术支持
+
+如有问题或建议，请 [提交 Issue](https://github.com/ava-agent/fish-agent/issues)。
 
 ## License
 
