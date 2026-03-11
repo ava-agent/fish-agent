@@ -1,11 +1,14 @@
 # 钓鱼佬 - 像素风钓鱼模拟游戏
 
+![钓鱼佬 Banner](screenshots/banner.png)
+
 [![Expo](https://img.shields.io/badge/Expo-54-black?logo=expo)](https://expo.dev)
-[![React Native](https://img.shields.io/badge/React%20Native-0.76-blue?logo=react)](https://reactnative.dev)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?logo=typescript)](https://www.typescriptlang.org/)
+[![React Native](https://img.shields.io/badge/React%20Native-0.81-blue?logo=react)](https://reactnative.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue?logo=typescript)](https://www.typescriptlang.org/)
+[![Zustand](https://img.shields.io/badge/Zustand-5.0-orange)](https://github.com/pmndrs/zustand)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-一款面向钓鱼爱好者的像素风移动端趣味应用，集钓鱼模拟、百科图鉴、社区推荐、钓鱼日记于一体。
+一款面向钓鱼爱好者的像素风移动端趣味应用，集**钓鱼模拟**、**百科图鉴**、**社区推荐**、**钓鱼日记**于一体。全部视觉元素通过代码绘制，无需外部图片资源。
 
 **在线体验**: [https://fish-agent.vercel.app](https://fish-agent.vercel.app)
 
@@ -39,6 +42,8 @@ npx expo start --web
 
 交互式钓鱼模拟游戏，完整还原钓鱼流程：
 
+![游戏流程](screenshots/game-flow.png)
+
 - **选饵** — 6 种鱼饵（蚯蚓/玉米/面饵/小鱼/路亚/虾），每种对不同鱼种有不同效果
 - **抛竿** — 蓄力条控制抛投距离
 - **等待** — 浮漂在水面浮动，鱼 AI 根据鱼饵匹配度决定是否咬钩
@@ -49,6 +54,8 @@ npx expo start --web
 #### 遛鱼机制详解
 
 遛鱼是游戏的核心玩法，需要保持线张力在**绿色区域 (30%-70%)**：
+
+![张力控制](screenshots/tension-guide.png)
 
 | 张力范围 | 状态 | 效果 |
 |---------|------|------|
@@ -66,6 +73,8 @@ npx expo start --web
 
 ### 2. 钓鱼百科
 
+![鱼种图鉴](screenshots/fish-encyclopedia.png)
+
 - **鱼种图鉴** — 12 种鱼（鲫鱼/草鱼/青鱼/鲤鱼/鲶鱼/鲢鱼/鳜鱼/黑鱼/罗非鱼/大口黑鲈/黄颡鱼/锦鲤），含属性、栖息地、实钓小贴士
 - **钓具大全** — 11 种装备（鱼竿/鱼线/鱼钩）含属性对比
 - **钓法教程** — 5 种钓法（台钓/底钓/路亚/飞蝇/夜钓）含操作步骤
@@ -80,13 +89,15 @@ npx expo start --web
 - **钓鱼日记** — 记录每次钓鱼的地点、天气、时长、鱼获
 - **数据统计** — 出钓次数、总钓获、图鉴收集进度
 
-## 技术栈
+## 技术架构
+
+![技术架构](screenshots/architecture.png)
 
 | 技术 | 用途 |
 |------|------|
-| React Native + Expo SDK 54 | 跨平台框架 |
-| expo-router | 文件路由系统 |
-| Zustand | 状态管理 |
+| React Native 0.81 + Expo SDK 54 | 跨平台框架 |
+| expo-router v6 | 文件路由系统 |
+| Zustand v5 | 状态管理 |
 | AsyncStorage | 本地数据持久化 |
 | Supabase | 云端数据库（可选） |
 | React Native Animated | 动画系统 |
@@ -115,13 +126,14 @@ fish-agent/
 │           ├── new.tsx           # 新建记录
 │           └── stats.tsx         # 统计面板
 ├── src/
-│   ├── components/common/        # 像素风 UI 组件
+│   ├── components/common/        # 像素风 UI 组件 (PixelText/PixelButton/PixelCard)
 │   ├── data/                     # 静态数据 (鱼种/钓具/鱼饵/社区)
 │   ├── game/types.ts             # TypeScript 类型定义
-│   ├── stores/                   # Zustand 状态管理
+│   ├── stores/                   # Zustand 状态管理 (Game/FishDex/Record)
 │   ├── theme/                    # 主题 (颜色/间距/字体)
-│   └── utils/supabase.ts        # Supabase 客户端
+│   └── utils/supabase.ts         # Supabase 客户端
 ├── supabase/migrations/          # 数据库迁移脚本
+├── screenshots/                  # 应用截图与文档图示
 ├── babel.config.js               # Babel 配置 (import.meta 转换)
 ├── vercel.json                   # Vercel 部署配置
 └── app.json                      # Expo 配置
@@ -186,6 +198,34 @@ EXPO_PUBLIC_SUPABASE_URL=your_supabase_url
 EXPO_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
+## 数据模型
+
+### 游戏状态 (useGameStore)
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| phase | GamePhase | 游戏阶段 (idle/casting/waiting/hooking/fighting/caught/escaped) |
+| currentFish | FishSpecies | 当前上钩的鱼 |
+| lineTension | number | 线张力 (0-1) |
+| fishStamina | number | 鱼体力 (0-1) |
+| reelSpeed | number | 收线速度 (0-1) |
+| score | number | 累计分数 |
+| totalCatches | number | 累计钓获数 |
+
+### 图鉴状态 (useFishDexStore)
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| entries | FishDexEntry[] | 图鉴条目列表 |
+| discoveredCount | number | 已发现鱼种数 |
+
+### 钓鱼记录 (useRecordStore)
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| records | FishingRecord[] | 钓鱼日记列表 |
+| totalTrips | number | 出钓次数 |
+
 ## 常见问题
 
 ### Web 端 `import.meta` 错误
@@ -228,27 +268,6 @@ React Native Web 不支持 `useNativeDriver`，代码中已使用 `Platform.OS !
 - 12 种鱼种图鉴
 - 6 种鱼饵系统
 - 钓鱼日记记录功能
-
-## 数据模型
-
-### 游戏状态 (useGameStore)
-
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| phase | GamePhase | 游戏阶段 |
-| currentFish | FishSpecies | 当前上钩的鱼 |
-| lineTension | number | 线张力 (0-1) |
-| fishStamina | number | 鱼体力 (0-1) |
-| reelSpeed | number | 收线速度 (0-1) |
-| score | number | 累计分数 |
-| totalCatches | number | 累计钓获数 |
-
-### 图鉴状态 (useFishDexStore)
-
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| entries | FishDexEntry[] | 图鉴条目列表 |
-| discoveredCount | number | 已发现鱼种数 |
 
 ## 贡献指南
 
