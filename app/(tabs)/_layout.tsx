@@ -41,12 +41,36 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="agent"
+        options={{
+          title: 'AI助手',
+          tabBarIcon: ({ color, focused }) => (
+            <View style={focused ? styles.activeIcon : undefined}>
+              <MaterialCommunityIcons name="robot" size={24} color={color} />
+              {focused && <View style={styles.iconGlow} />}
+            </View>
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="community"
         options={{
           title: '社区',
           tabBarIcon: ({ color, focused }) => (
             <View style={focused ? styles.activeIcon : undefined}>
               <MaterialCommunityIcons name="account-group" size={24} color={color} />
+              {focused && <View style={styles.iconGlow} />}
+            </View>
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="achievements"
+        options={{
+          title: '成就',
+          tabBarIcon: ({ color, focused }) => (
+            <View style={focused ? styles.activeIcon : undefined}>
+              <MaterialCommunityIcons name="trophy" size={24} color={color} />
               {focused && <View style={styles.iconGlow} />}
             </View>
           ),

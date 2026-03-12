@@ -17,6 +17,7 @@ import { PixelCard } from '../../src/components/common/PixelCard';
 import { PixelSprite } from '../../src/components/common/PixelSprite';
 import { useGameStore } from '../../src/stores/useGameStore';
 import { useFishDexStore } from '../../src/stores/useFishDexStore';
+import { useAgentStore } from '../../src/stores/useAgentStore';
 import { FISH_SPECIES } from '../../src/data/fish-species';
 import { AI_CREATURES } from '../../src/data/aiCreatures';
 import { BAITS } from '../../src/data/baits';
@@ -495,6 +496,22 @@ function AICatchResultOverlay({
   );
 }
 
+function AgentHUD() {
+  const agentLevel = useAgentStore().getLevel();
+  const agentTitle = useAgentStore().getLevelTitle();
+
+  return (
+    <View style={styles.agentHud}>
+      <PixelText variant="pixel" color={PIXEL_COLORS.aiCyan} style={{ fontSize: 8 }}>
+        AI助手 Lv.{agentLevel}
+      </PixelText>
+      <PixelText variant="pixel" color={PIXEL_COLORS.uiTextDim} style={{ fontSize: 7 }}>
+        {agentTitle}
+      </PixelText>
+    </View>
+  );
+}
+
 export default function FishingScreen() {
   const {
     phase, selectedBait, currentFish, lineTension, fishStamina,
@@ -503,6 +520,9 @@ export default function FishingScreen() {
   } = useGameStore();
 
   const { discoverFish, isDiscovered } = useFishDexStore();
+  const { addResources, generation, reasoning, compute } = useAgentStore();
+  const agentLevel = useAgentStore().getLevel();
+  const agentTitle = useAgentStore().getLevelTitle();
 
   const [castPower, setCastPower] = useState(0);
   const [isCasting, setIsCasting] = useState(false);
@@ -646,6 +666,10 @@ export default function FishingScreen() {
         staminaDrain = 0.01;
       }
 
+      const computeLevel = useAgentStore.getState().compute;
+      const computeBonus = 1 + computeLevel * 0.1;
+      staminaDrain *= computeBonus;
+
       updateFishStamina(state.fishStamina - staminaDrain);
 
       if (state.fishStamina - staminaDrain <= 0) {
@@ -655,6 +679,12 @@ export default function FishingScreen() {
         setIsNewDiscovery(!isDiscovered(fish.id));
         discoverFish(fish.id, weight);
         catchFish();
+        if (fish.drops) {
+          addResources(fish.drops);
+        }
+        if (fish.entityType === 'fish' || !fish.entityType) {
+          addResources([{ type: 'training_data', amount: 1 }]);
+        }
       } else if (newTension >= 1) {
         if (gameLoop.current) clearInterval(gameLoop.current);
         fishEscaped();
@@ -663,7 +693,7 @@ export default function FishingScreen() {
         fishEscaped();
       }
     }, 100);
-  }, [phase, setPhase, updateTension, updateFishStamina, catchFish, fishEscaped, discoverFish, isDiscovered]);
+  }, [phase, setPhase, updateTension, updateFishStamina, catchFish, fishEscaped, discoverFish, isDiscovered, addResources]);
 
   const panResponder = useRef(
     PanResponder.create({
@@ -732,6 +762,8 @@ export default function FishingScreen() {
             <View style={[styles.cloudBlock, { width: 32, marginTop: -6, marginLeft: 4 }]} />
           </View>
         </View>
+
+        <AgentHUD />
 
         {/* Shore with layered grass */}
         <View style={styles.shore}>
@@ -872,6 +904,16 @@ export default function FishingScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: PIXEL_COLORS.skyTop },
   gameScene: { flex: 1 },
+  agentHud: {
+    position: 'absolute' as const,
+    top: 8,
+    right: 8,
+    backgroundColor: PIXEL_COLORS.hudBg + 'DD',
+    borderWidth: 1,
+    borderColor: PIXEL_COLORS.aiCyanDim,
+    padding: 6,
+    zIndex: 20,
+  },
 
   // Sky - layered gradient
   sky: { height: '30%', position: 'relative', overflow: 'hidden' },

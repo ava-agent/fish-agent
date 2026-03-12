@@ -1,0 +1,60 @@
+import { Achievement } from '../game/types';
+
+export const ACHIEVEMENTS: Achievement[] = [
+  {
+    id: 'first_contact',
+    name: 'First Contact',
+    nameCn: '初次接触',
+    description: '钓到第 1 个 AI 生物',
+    condition: { type: 'catch_count', target: 1, filter: { entityType: 'ai_creature' } },
+    reward: { type: 'unlock_bait', baitId: 'data_fragment' },
+  },
+  {
+    id: 'hallucination_master',
+    name: 'Hallucination Master',
+    nameCn: '幻觉大师',
+    description: '钓到 3 只 Hallucination 水母',
+    condition: { type: 'catch_specific', target: 3, filter: { speciesId: 'hallucination_jelly' } },
+    reward: { type: 'resources', resources: [{ type: 'prompt_fragment', amount: 10 }] },
+  },
+  {
+    id: 'full_stack',
+    name: 'Full Stack Fisher',
+    nameCn: '全栈钓手',
+    description: '真鱼和 AI 生物各集齐 5 种',
+    condition: { type: 'collection', target: 5 },
+    reward: { type: 'unlock_bait', baitId: 'compute_chip' },
+  },
+  {
+    id: 'attention',
+    name: 'Attention!',
+    nameCn: 'Attention!',
+    description: '钓到 Transformer 鲸',
+    condition: { type: 'catch_specific', target: 1, filter: { speciesId: 'transformer_whale' } },
+    reward: { type: 'resources', resources: [{ type: 'compute_crystal', amount: 3 }] },
+  },
+  {
+    id: 'combo_5',
+    name: 'Combo Master',
+    nameCn: '连续 Combo',
+    description: '连续钓到 5 条不断线',
+    condition: { type: 'combo', target: 5 },
+    reward: { type: 'equipment_fragment', fragmentId: 'neural_line' },
+  },
+  {
+    id: 'all_hallucination',
+    name: "It's All Hallucination",
+    nameCn: '都是幻觉',
+    description: '被 Hallucination 水母骗 3 次',
+    condition: { type: 'catch_specific', target: 3, filter: { speciesId: 'hallucination_jelly' } },
+    reward: { type: 'title', title: '幻觉鉴定师' },
+  },
+  {
+    id: 'agi_achieved',
+    name: 'AGI Achieved?',
+    nameCn: 'AGI 已达成？',
+    description: '钓到 AGI 锦鲤',
+    condition: { type: 'catch_specific', target: 1, filter: { speciesId: 'agi_koi' } },
+    reward: { type: 'agent_levels', levels: 3 },
+  },
+];
