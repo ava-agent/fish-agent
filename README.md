@@ -10,7 +10,7 @@
 
 一款面向钓鱼爱好者的像素风移动端趣味应用，集**钓鱼模拟**、**百科图鉴**、**社区推荐**、**钓鱼日记**于一体。全部视觉元素通过代码绘制，无需外部图片资源。
 
-**在线体验**: [https://fish-agent.vercel.app](https://fish-agent.vercel.app)
+**在线体验**: [https://fish.rxcloud.group](https://fish.rxcloud.group)
 
 ## 快速开始
 
