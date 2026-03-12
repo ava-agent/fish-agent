@@ -6,13 +6,17 @@ import { PixelText } from '../../../src/components/common/PixelText';
 import { PixelCard } from '../../../src/components/common/PixelCard';
 import { PixelSprite } from '../../../src/components/common/PixelSprite';
 import { FISH_SPECIES } from '../../../src/data/fish-species';
+import { AI_CREATURES } from '../../../src/data/aiCreatures';
 import { BAITS } from '../../../src/data/baits';
 import { useFishDexStore } from '../../../src/stores/useFishDexStore';
+
+const ALL_SPECIES = [...FISH_SPECIES, ...AI_CREATURES];
 
 const RARITY_COLOR: Record<string, string> = {
   common: PIXEL_COLORS.rarityCommon,
   uncommon: PIXEL_COLORS.rarityUncommon,
   rare: PIXEL_COLORS.rarityRare,
+  epic: PIXEL_COLORS.rarityEpic,
   legendary: PIXEL_COLORS.rarityLegendary,
 };
 
@@ -20,6 +24,7 @@ const RARITY_LABEL: Record<string, string> = {
   common: '普通',
   uncommon: '少见',
   rare: '珍稀',
+  epic: '史诗',
   legendary: '传说',
 };
 
@@ -27,11 +32,12 @@ const CATEGORY_LABEL: Record<string, string> = {
   freshwater: '淡水',
   saltwater: '海水',
   pond: '池塘',
+  digital: '数字世界',
 };
 
 export default function FishDetailScreen() {
   const { fishId } = useLocalSearchParams<{ fishId: string }>();
-  const fish = FISH_SPECIES.find((f) => f.id === fishId);
+  const fish = ALL_SPECIES.find((f) => f.id === fishId);
   const { isDiscovered, getEntry } = useFishDexStore();
 
   if (!fish) {
@@ -44,6 +50,7 @@ export default function FishDetailScreen() {
 
   const discovered = isDiscovered(fish.id);
   const entry = getEntry(fish.id);
+  const isAI = fish.entityType === 'ai_creature';
   const preferredBaits = BAITS.filter((b) => fish.preferredBait.includes(b.id));
   const rarityColor = RARITY_COLOR[fish.rarity] || PIXEL_COLORS.rarityCommon;
 
@@ -134,6 +141,41 @@ export default function FishDetailScreen() {
         </PixelText>
         <PixelText variant="body">{fish.description}</PixelText>
       </PixelCard>
+
+      {/* AI creature quote */}
+      {isAI && fish.quoteOnCatch && (
+        <PixelCard variant="highlight" style={styles.section}>
+          <PixelText variant="subtitle" color={PIXEL_COLORS.aiPurple} style={{ marginBottom: 8, textAlign: 'center' }}>
+            === AI 语录 ===
+          </PixelText>
+          <PixelText variant="body" color={PIXEL_COLORS.uiText} style={{ fontStyle: 'italic', textAlign: 'center' }}>
+            "{fish.quoteOnCatch}"
+          </PixelText>
+        </PixelCard>
+      )}
+
+      {/* AI creature drops */}
+      {isAI && fish.drops && fish.drops.length > 0 && (
+        <PixelCard style={styles.section}>
+          <PixelText variant="subtitle" color={PIXEL_COLORS.aiCyan} style={{ marginBottom: 8, textAlign: 'center' }}>
+            === 掉落资源 ===
+          </PixelText>
+          {fish.drops.map((drop, i) => {
+            const dropLabels: Record<string, string> = {
+              prompt_fragment: 'Prompt碎片',
+              model_params: '模型参数',
+              training_data: '训练数据',
+              compute_crystal: '算力晶体',
+            };
+            return (
+              <View key={i} style={styles.statRow}>
+                <PixelText variant="caption" style={styles.statLabel}>{dropLabels[drop.type] || drop.type}</PixelText>
+                <PixelText variant="caption" color={PIXEL_COLORS.aiCyan}>+{drop.amount}</PixelText>
+              </View>
+            );
+          })}
+        </PixelCard>
+      )}
 
       {/* Preferred baits - inventory slot style */}
       <PixelCard style={styles.section}>

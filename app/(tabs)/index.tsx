@@ -368,11 +368,11 @@ function TutorialOverlay({ onClose }: { onClose: () => void }) {
   );
 }
 
-const PARTICLE_DATA = ['01', 'AI', '∇', 'λ', '10', '{}', '>>'].map((text, i) => ({
+const PARTICLE_DATA = ['01', 'AI', '∇', 'λ', '10', '{}', '>>', '0x', 'ML', '∂f'].map((text, i) => ({
   text,
   x: Math.random() * SCREEN_WIDTH,
-  delay: i * 600,
-  bottom: 20 + i * 15,
+  delay: i * 500,
+  bottom: 10 + i * 12,
 }));
 
 function DataParticle({ text, x, delay, bottom }: { text: string; x: number; delay: number; bottom: number }) {
@@ -390,7 +390,7 @@ function DataParticle({ text, x, delay, bottom }: { text: string; x: number; del
   }, []);
 
   const translateY = anim.interpolate({ inputRange: [0, 1], outputRange: [30, -40] });
-  const opacity = anim.interpolate({ inputRange: [0, 0.2, 0.8, 1], outputRange: [0, 0.5, 0.3, 0] });
+  const opacity = anim.interpolate({ inputRange: [0, 0.2, 0.8, 1], outputRange: [0, 0.7, 0.4, 0] });
 
   return (
     <Animated.View
@@ -402,7 +402,7 @@ function DataParticle({ text, x, delay, bottom }: { text: string; x: number; del
         opacity,
       }}
     >
-      <PixelText variant="pixel" color={PIXEL_COLORS.aiPurple} style={{ fontSize: 8 }}>
+      <PixelText variant="pixel" color={PIXEL_COLORS.aiPurple} style={{ fontSize: 10 }}>
         {text}
       </PixelText>
     </Animated.View>
@@ -509,6 +509,29 @@ function AgentHUD() {
         {agentTitle}
       </PixelText>
     </View>
+  );
+}
+
+function AIInvasionBanner() {
+  const pulseAnim = useRef(new Animated.Value(0.6)).current;
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, { toValue: 1, duration: 1500, useNativeDriver: Platform.OS !== 'web' }),
+        Animated.timing(pulseAnim, { toValue: 0.6, duration: 1500, useNativeDriver: Platform.OS !== 'web' }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, []);
+
+  return (
+    <Animated.View style={[styles.invasionBanner, { opacity: pulseAnim }]}>
+      <PixelText variant="pixel" color={PIXEL_COLORS.aiPurple} style={{ fontSize: 9 }}>
+        ⚠ AI 入侵中 — 水中发现异常数据体 ⚠
+      </PixelText>
+    </Animated.View>
   );
 }
 
@@ -735,6 +758,44 @@ export default function FishingScreen() {
     reset();
   }, [reset]);
 
+  // Desktop keyboard support: spacebar for main actions
+  useEffect(() => {
+    if (Platform.OS !== 'web') return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code !== 'Space') return;
+      e.preventDefault();
+
+      const currentPhase = useGameStore.getState().phase;
+      if (currentPhase === 'idle') {
+        startCasting();
+      } else if (currentPhase === 'casting') {
+        releaseCast();
+      } else if (currentPhase === 'bite') {
+        handleHookSet();
+      } else if (currentPhase === 'fighting') {
+        useGameStore.setState({ reelSpeed: 0.6 });
+      } else if (currentPhase === 'caught' || currentPhase === 'escaped') {
+        handleContinue();
+      }
+    };
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.code !== 'Space') return;
+      const currentPhase = useGameStore.getState().phase;
+      if (currentPhase === 'fighting') {
+        useGameStore.setState({ reelSpeed: 0 });
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('keyup', handleKeyUp);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('keyup', handleKeyUp);
+    };
+  }, [startCasting, releaseCast, handleHookSet, handleContinue]);
+
   return (
     <View style={styles.container}>
       <View style={styles.gameScene}>
@@ -764,6 +825,7 @@ export default function FishingScreen() {
         </View>
 
         <AgentHUD />
+        <AIInvasionBanner />
 
         {/* Shore with layered grass */}
         <View style={styles.shore}>
@@ -785,20 +847,30 @@ export default function FishingScreen() {
         <View style={styles.water}>
           <WaterWaves />
           <DataParticles />
-          {swimmingFish.map((sf, i) => (
-            <View
-              key={i}
-              style={{
-                position: 'absolute',
-                left: sf.x,
-                top: sf.y - GAME_HEIGHT * 0.45,
-                opacity: 0.5,
-                transform: [{ scaleX: sf.dx > 0 ? 1 : -1 }],
-              }}
-            >
-              <PixelSprite data={sf.fish.pixelArt} colors={sf.fish.pixelColors} pixelSize={3} />
-            </View>
-          ))}
+          {swimmingFish.map((sf, i) => {
+            const isAICreature = sf.fish.entityType === 'ai_creature';
+            return (
+              <View
+                key={i}
+                style={{
+                  position: 'absolute',
+                  left: sf.x,
+                  top: sf.y - GAME_HEIGHT * 0.45,
+                  opacity: isAICreature ? 0.85 : 0.5,
+                  transform: [{ scaleX: sf.dx > 0 ? 1 : -1 }],
+                }}
+              >
+                {isAICreature && (
+                  <View style={{
+                    position: 'absolute', top: -3, left: -3, right: -3, bottom: -3,
+                    backgroundColor: PIXEL_COLORS.aiPurple + '22',
+                    borderWidth: 1, borderColor: PIXEL_COLORS.aiPurple + '44',
+                  }} />
+                )}
+                <PixelSprite data={sf.fish.pixelArt} colors={sf.fish.pixelColors} pixelSize={3} />
+              </View>
+            );
+          })}
           <View style={styles.bobberArea}>
             <Bobber visible={phase === 'waiting' || phase === 'bite'} bite={phase === 'bite'} />
           </View>
@@ -831,6 +903,11 @@ export default function FishingScreen() {
           <View style={styles.bottomUI}>
             <BaitSelector selectedBait={selectedBait} onSelect={selectBait} />
             <PixelButton title="按此蓄力抛竿" onPress={startCasting} size="large" style={{ marginTop: 8 }} icon="▸" />
+            {Platform.OS === 'web' && (
+              <PixelText variant="caption" color={PIXEL_COLORS.uiTextDim} style={{ textAlign: 'center', marginTop: 4, fontSize: 9 }}>
+                电脑端可按空格键操作
+              </PixelText>
+            )}
           </View>
         )}
 
@@ -912,6 +989,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: PIXEL_COLORS.aiCyanDim,
     padding: 6,
+    zIndex: 20,
+  },
+  invasionBanner: {
+    position: 'absolute' as const,
+    top: 8,
+    left: 8,
+    backgroundColor: PIXEL_COLORS.hudBg + 'CC',
+    borderWidth: 1,
+    borderColor: PIXEL_COLORS.aiPurple + '66',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
     zIndex: 20,
   },
 
