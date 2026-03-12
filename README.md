@@ -103,6 +103,52 @@ npx expo start --web
 | React Native Animated | 动画系统 |
 | PanResponder | 手势交互 |
 
+## AI Agent 架构设计
+
+本项目的游戏逻辑采用了 AI Agent 设计模式，将钓鱼模拟的核心玩法抽象为感知-决策-执行的智能体架构。
+
+### 系统架构 (三层模型)
+
+![AI Agent 系统架构](screenshots/agent-architecture.png)
+
+Agent 系统分为三个层次：
+
+| 层次 | 职责 | 实现 |
+|------|------|------|
+| **感知层 (Perception)** | 采集环境信息和玩家输入 | 环境感知 + 玩家输入 + 数据源 |
+| **决策层 (Decision)** | ReAct 循环 + Fish AI 决策 | Observe → Reason → Act 循环 |
+| **执行层 (Execution)** | 状态更新与 UI 渲染 | Zustand Store + AsyncStorage + React Native UI |
+
+### Agent 执行流程 (ReAct 模式)
+
+![Agent 执行流程](screenshots/agent-react-flow.png)
+
+游戏状态机遵循 **ReAct (Reasoning + Acting)** 模式：
+
+1. **Observe (观察)** — 读取当前游戏状态：线张力、鱼体力、玩家手势输入
+2. **Reason (推理)** — 基于规则计算：鱼的拉力方向、咬钩概率、逃脱判定
+3. **Act (行动)** — 更新游戏状态：修改张力值、消耗鱼体力、触发状态转换
+
+核心 ReAct 循环在 **遛鱼 (Fighting)** 阶段每帧执行：
+- 观察：读取 `lineTension` 和 `fishStamina`
+- 推理：计算鱼的挣扎力度、判断张力是否在安全区间
+- 行动：更新状态 → 张力过高则断线 (ESCAPED)、体力归零则成功 (CAUGHT)
+
+### Agent 知识体系 (RAG 模式)
+
+![Agent 知识体系](screenshots/agent-rag-pattern.png)
+
+Fish AI 的决策采用类 **RAG (Retrieval-Augmented Generation)** 模式：
+
+| 阶段 | 说明 | 示例 |
+|------|------|------|
+| **知识库 (Knowledge Base)** | 静态数据存储 | 12 种鱼的属性、6×12 鱼饵效果矩阵、钓具属性 |
+| **检索增强 (Retrieval)** | 查询匹配 + 概率排序 | `bait.effectiveness[fishId]` 查找匹配度 → 加权随机选择 |
+| **生成决策 (Generation)** | 行为输出 | 咬钩/忽略决策、战斗动态参数、奖励计算 |
+| **反馈循环 (Feedback)** | 结果回写 | 更新图鉴收集状态、记录钓鱼日志 |
+
+**知识检索流程**：玩家选择鱼饵 → 查询鱼饵效果矩阵 → 计算每种鱼的咬钩概率 → 加权随机决定哪条鱼上钩 → 根据鱼种属性生成战斗参数。
+
 ## 项目结构
 
 ```
