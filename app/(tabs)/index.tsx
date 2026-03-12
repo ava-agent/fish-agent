@@ -14,6 +14,7 @@ import { PIXEL_COLORS } from '../../src/theme/colors';
 import { PixelText } from '../../src/components/common/PixelText';
 import { PixelButton } from '../../src/components/common/PixelButton';
 import { PixelCard } from '../../src/components/common/PixelCard';
+import { PixelSprite } from '../../src/components/common/PixelSprite';
 import { useGameStore } from '../../src/stores/useGameStore';
 import { useFishDexStore } from '../../src/stores/useFishDexStore';
 import { FISH_SPECIES } from '../../src/data/fish-species';
@@ -25,32 +26,27 @@ const TUTORIAL_SHOWN_KEY = '@fishing_tutorial_shown';
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const GAME_HEIGHT = SCREEN_HEIGHT - 140;
 
-function PixelSprite({
-  data,
-  colors,
-  pixelSize = 4,
-}: {
-  data: number[][];
-  colors: string[];
-  pixelSize?: number;
-}) {
+// Pixel star positions for sky decoration
+const STARS = Array.from({ length: 12 }, () => ({
+  x: Math.random() * SCREEN_WIDTH,
+  y: Math.random() * (GAME_HEIGHT * 0.25),
+  size: Math.random() > 0.7 ? 3 : 2,
+  opacity: 0.3 + Math.random() * 0.7,
+}));
+
+function PixelStar({ x, y, size, opacity }: { x: number; y: number; size: number; opacity: number }) {
   return (
-    <View>
-      {data.map((row, r) => (
-        <View key={r} style={{ flexDirection: 'row' }}>
-          {row.map((colorIdx, c) => (
-            <View
-              key={c}
-              style={{
-                width: pixelSize,
-                height: pixelSize,
-                backgroundColor: colorIdx > 0 ? colors[colorIdx] : 'transparent',
-              }}
-            />
-          ))}
-        </View>
-      ))}
-    </View>
+    <View
+      style={{
+        position: 'absolute',
+        left: x,
+        top: y,
+        width: size,
+        height: size,
+        backgroundColor: PIXEL_COLORS.starColor,
+        opacity,
+      }}
+    />
   );
 }
 
@@ -69,11 +65,17 @@ function WaterWaves() {
     return () => loop.stop();
   }, []);
 
-  const waves = Array.from({ length: 8 }, (_, i) => {
+  const waves = Array.from({ length: 10 }, (_, i) => {
     const translateX = waveAnim.interpolate({
       inputRange: [0, 1],
-      outputRange: [i % 2 === 0 ? -20 : 0, i % 2 === 0 ? 0 : -20],
+      outputRange: [i % 2 === 0 ? -24 : 0, i % 2 === 0 ? 0 : -24],
     });
+
+    const color =
+      i < 2 ? PIXEL_COLORS.waterFoam
+      : i < 4 ? PIXEL_COLORS.waterSurface
+      : i < 7 ? PIXEL_COLORS.waterLight
+      : PIXEL_COLORS.waterMid;
 
     return (
       <Animated.View
@@ -81,10 +83,9 @@ function WaterWaves() {
         style={[
           styles.waveLine,
           {
-            top: i * 6,
-            opacity: 1 - i * 0.1,
-            backgroundColor:
-              i < 3 ? PIXEL_COLORS.waterSurface : i < 6 ? PIXEL_COLORS.waterLight : PIXEL_COLORS.waterMid,
+            top: i * 5,
+            opacity: i < 2 ? 0.4 : 1 - i * 0.08,
+            backgroundColor: color,
             transform: [{ translateX }],
           },
         ]}
@@ -138,8 +139,9 @@ function Bobber({ visible, bite }: { visible: boolean; bite: boolean }) {
         { transform: [{ translateY: Animated.add(bounceAnim, biteAnim) }] },
       ]}
     >
-      <View style={[styles.bobberTop, { backgroundColor: '#FF4444' }]} />
-      <View style={[styles.bobberBottom, { backgroundColor: '#FFFFFF' }]} />
+      <View style={styles.bobberTop} />
+      <View style={styles.bobberMid} />
+      <View style={styles.bobberBottom} />
       <View style={styles.bobberLine} />
     </Animated.View>
   );
@@ -153,24 +155,23 @@ function TensionMeter({ tension }: { tension: number }) {
     : PIXEL_COLORS.uiDanger;
 
   const label =
-    tension < 0.15 ? '要跑了！'
-    : tension < 0.3 ? '太松'
-    : tension < 0.7 ? '完美！'
-    : tension < 0.85 ? '危险！'
-    : '快断！';
+    tension < 0.15 ? '!! 要跑了 !!'
+    : tension < 0.3 ? '- 太松 -'
+    : tension < 0.7 ? '>>> 完美 <<<'
+    : tension < 0.85 ? '! 危险 !'
+    : '!!! 快断 !!!';
 
   return (
     <View style={styles.tensionContainer}>
-      <PixelText variant="caption" color={PIXEL_COLORS.uiText}>线张力</PixelText>
+      <View style={styles.meterHeader}>
+        <PixelText variant="pixel" color={PIXEL_COLORS.uiText}>线张力</PixelText>
+        <PixelText variant="pixel" color={color}>{label}</PixelText>
+      </View>
       <View style={styles.tensionBar}>
-        {/* Danger zone - too slack */}
         <View style={[styles.tensionZone, styles.tensionZoneSlack]} />
-        {/* Sweet spot zone */}
         <View style={[styles.tensionZone, styles.tensionZoneSweet]} />
-        {/* Tension fill */}
         <View style={[styles.tensionFill, { width: `${tension * 100}%`, backgroundColor: color }]} />
       </View>
-      <PixelText variant="caption" color={color}>{label}</PixelText>
     </View>
   );
 }
@@ -178,7 +179,12 @@ function TensionMeter({ tension }: { tension: number }) {
 function StaminaBar({ stamina }: { stamina: number }) {
   return (
     <View style={styles.staminaContainer}>
-      <PixelText variant="caption" color={PIXEL_COLORS.uiText}>鱼体力</PixelText>
+      <View style={styles.meterHeader}>
+        <PixelText variant="pixel" color={PIXEL_COLORS.uiText}>鱼体力</PixelText>
+        <PixelText variant="pixel" color={stamina > 0.5 ? PIXEL_COLORS.uiSuccess : PIXEL_COLORS.uiDanger}>
+          {Math.round(stamina * 100)}%
+        </PixelText>
+      </View>
       <View style={styles.staminaBar}>
         <View
           style={[
@@ -190,7 +196,6 @@ function StaminaBar({ stamina }: { stamina: number }) {
           ]}
         />
       </View>
-      <PixelText variant="caption">{Math.round(stamina * 100)}%</PixelText>
     </View>
   );
 }
@@ -198,7 +203,9 @@ function StaminaBar({ stamina }: { stamina: number }) {
 function BaitSelector({ selectedBait, onSelect }: { selectedBait: string; onSelect: (id: string) => void }) {
   return (
     <View style={styles.baitSelector}>
-      <PixelText variant="caption" style={{ marginBottom: 6 }}>选择鱼饵:</PixelText>
+      <PixelText variant="pixel" color={PIXEL_COLORS.uiHighlight} style={{ marginBottom: 8 }}>
+        [ 选择鱼饵 ]
+      </PixelText>
       <View style={styles.baitRow}>
         {BAITS.map((bait) => (
           <TouchableOpacity
@@ -214,6 +221,13 @@ function BaitSelector({ selectedBait, onSelect }: { selectedBait: string; onSele
             >
               {bait.nameCn}
             </PixelText>
+            {selectedBait === bait.id && (
+              <View style={styles.baitArrow}>
+                <PixelText variant="pixel" color={PIXEL_COLORS.uiHighlight} style={{ fontSize: 8 }}>
+                  {'▼'}
+                </PixelText>
+              </View>
+            )}
           </TouchableOpacity>
         ))}
       </View>
@@ -227,10 +241,10 @@ function CatchResultOverlay({
   fish: FishSpecies; weight: number; isNewDiscovery: boolean; onContinue: () => void;
 }) {
   const rarityColor: Record<string, string> = {
-    common: PIXEL_COLORS.uiText,
-    uncommon: PIXEL_COLORS.uiInfo,
-    rare: PIXEL_COLORS.fishPurple,
-    legendary: PIXEL_COLORS.uiHighlight,
+    common: PIXEL_COLORS.rarityCommon,
+    uncommon: PIXEL_COLORS.rarityUncommon,
+    rare: PIXEL_COLORS.rarityRare,
+    legendary: PIXEL_COLORS.rarityLegendary,
   };
   const rarityLabel: Record<string, string> = {
     common: '普通', uncommon: '少见', rare: '珍稀', legendary: '传说',
@@ -241,32 +255,37 @@ function CatchResultOverlay({
       <PixelCard style={styles.catchCard}>
         {isNewDiscovery && (
           <View style={styles.newBadge}>
-            <PixelText variant="pixel" color={PIXEL_COLORS.uiHighlight}>{'★ 新发现！★'}</PixelText>
+            <PixelText variant="pixel" color={PIXEL_COLORS.uiHighlight}>
+              {'★★★ 新发现！★★★'}
+            </PixelText>
           </View>
         )}
-        <PixelText variant="title" style={{ textAlign: 'center', marginBottom: 12 }}>钓到了！</PixelText>
+        <PixelText variant="title" color={PIXEL_COLORS.uiHighlight} style={{ textAlign: 'center', marginBottom: 12 }}>
+          - 钓到了！-
+        </PixelText>
         <View style={styles.catchFishDisplay}>
           <PixelSprite data={fish.pixelArt} colors={fish.pixelColors} pixelSize={8} />
         </View>
         <PixelText variant="subtitle" style={{ textAlign: 'center', marginTop: 12 }}>{fish.nameCn}</PixelText>
-        <PixelText variant="caption" color={rarityColor[fish.rarity]} style={{ textAlign: 'center' }}>
-          {rarityLabel[fish.rarity]}
+        <PixelText variant="caption" color={rarityColor[fish.rarity]} style={{ textAlign: 'center', marginTop: 2 }}>
+          [{rarityLabel[fish.rarity]}]
         </PixelText>
         <View style={styles.catchStats}>
           <View style={styles.catchStat}>
-            <PixelText variant="caption">重量</PixelText>
+            <PixelText variant="pixel" color={PIXEL_COLORS.uiTextDim}>重量</PixelText>
             <PixelText variant="subtitle" color={PIXEL_COLORS.uiHighlight}>{weight.toFixed(1)} kg</PixelText>
           </View>
+          <View style={styles.catchStatDivider} />
           <View style={styles.catchStat}>
-            <PixelText variant="caption">难度</PixelText>
+            <PixelText variant="pixel" color={PIXEL_COLORS.uiTextDim}>难度</PixelText>
             <PixelText variant="subtitle" color={PIXEL_COLORS.uiHighlight}>{'★'.repeat(fish.difficulty)}</PixelText>
           </View>
         </View>
         <View style={styles.tipBox}>
-          <PixelText variant="caption" color={PIXEL_COLORS.uiInfo}>实钓小贴士:</PixelText>
+          <PixelText variant="pixel" color={PIXEL_COLORS.uiInfo}>实钓小贴士:</PixelText>
           <PixelText variant="caption" style={{ marginTop: 4 }}>{fish.tip}</PixelText>
         </View>
-        <PixelButton title="继续钓鱼" onPress={onContinue} style={{ marginTop: 12 }} />
+        <PixelButton title="继续钓鱼" onPress={onContinue} style={{ marginTop: 12 }} icon="▸" />
       </PixelCard>
     </View>
   );
@@ -276,11 +295,13 @@ function EscapeOverlay({ onContinue }: { onContinue: () => void }) {
   return (
     <View style={styles.overlay}>
       <PixelCard style={styles.escapeCard}>
-        <PixelText variant="title" style={{ textAlign: 'center' }}>跑鱼了...</PixelText>
-        <PixelText variant="body" style={{ textAlign: 'center', marginVertical: 12 }}>
-          鱼挣脱了鱼钩逃走了！{'\n'}下次注意控制张力哦～
+        <PixelText variant="title" color={PIXEL_COLORS.uiDanger} style={{ textAlign: 'center' }}>
+          - 跑鱼了 -
         </PixelText>
-        <PixelButton title="再来一次" onPress={onContinue} />
+        <PixelText variant="body" style={{ textAlign: 'center', marginVertical: 12 }}>
+          鱼挣脱了鱼钩逃走了！{'\n'}下次注意控制张力哦
+        </PixelText>
+        <PixelButton title="再来一次" onPress={onContinue} variant="secondary" icon="▸" />
       </PixelCard>
     </View>
   );
@@ -288,22 +309,20 @@ function EscapeOverlay({ onContinue }: { onContinue: () => void }) {
 
 function PowerMeter({ power, active }: { power: number; active: boolean }) {
   if (!active) return null;
+
+  const color =
+    power < 0.3 ? PIXEL_COLORS.uiInfo
+    : power < 0.7 ? PIXEL_COLORS.uiSuccess
+    : PIXEL_COLORS.uiHighlight;
+
   return (
     <View style={styles.powerMeter}>
-      <PixelText variant="caption" style={{ marginBottom: 4 }}>力度: {Math.round(power * 100)}%</PixelText>
+      <View style={styles.meterHeader}>
+        <PixelText variant="pixel" color={PIXEL_COLORS.uiText}>蓄力</PixelText>
+        <PixelText variant="pixel" color={color}>{Math.round(power * 100)}%</PixelText>
+      </View>
       <View style={styles.powerBarH}>
-        <View
-          style={[
-            styles.powerFillH,
-            {
-              width: `${power * 100}%`,
-              backgroundColor:
-                power < 0.3 ? PIXEL_COLORS.uiInfo
-                : power < 0.7 ? PIXEL_COLORS.uiSuccess
-                : PIXEL_COLORS.uiHighlight,
-            },
-          ]}
-        />
+        <View style={[styles.powerFillH, { width: `${power * 100}%`, backgroundColor: color }]} />
       </View>
     </View>
   );
@@ -312,32 +331,34 @@ function PowerMeter({ power, active }: { power: number; active: boolean }) {
 function TutorialOverlay({ onClose }: { onClose: () => void }) {
   return (
     <View style={styles.tutorialOverlay}>
-      <View style={styles.tutorialCard}>
-        <PixelText variant="title" style={{ marginBottom: 12 }}>钓鱼指南</PixelText>
+      <PixelCard style={styles.tutorialCard}>
+        <PixelText variant="title" color={PIXEL_COLORS.uiHighlight} style={{ textAlign: 'center', marginBottom: 16 }}>
+          {'=== 钓鱼指南 ==='}
+        </PixelText>
 
         <View style={styles.tutorialStep}>
-          <PixelText variant="subtitle" color={PIXEL_COLORS.uiHighlight}>1. 选饵</PixelText>
+          <PixelText variant="pixel" color={PIXEL_COLORS.uiHighlight}>{'[1]'} 选饵</PixelText>
           <PixelText variant="body">点击底部鱼饵按钮选择适合的鱼饵</PixelText>
         </View>
 
         <View style={styles.tutorialStep}>
-          <PixelText variant="subtitle" color={PIXEL_COLORS.uiHighlight}>2. 抛竿</PixelText>
-          <PixelText variant="body">按住"按此蓄力抛竿"按钮蓄力，松开抛出</PixelText>
+          <PixelText variant="pixel" color={PIXEL_COLORS.uiHighlight}>{'[2]'} 抛竿</PixelText>
+          <PixelText variant="body">按住蓄力按钮，松开抛出</PixelText>
         </View>
 
         <View style={styles.tutorialStep}>
-          <PixelText variant="subtitle" color={PIXEL_COLORS.uiHighlight}>3. 上钩</PixelText>
-          <PixelText variant="body">浮漂剧烈晃动时，点击"设钩！"提竿</PixelText>
+          <PixelText variant="pixel" color={PIXEL_COLORS.uiHighlight}>{'[3]'} 上钩</PixelText>
+          <PixelText variant="body">浮漂剧烈晃动时，点击屏幕提竿</PixelText>
         </View>
 
         <View style={styles.tutorialStep}>
-          <PixelText variant="subtitle" color={PIXEL_COLORS.uiHighlight}>4. 遛鱼</PixelText>
+          <PixelText variant="pixel" color={PIXEL_COLORS.uiHighlight}>{'[4]'} 遛鱼</PixelText>
           <PixelText variant="body">在圆圈内画圈收线，保持张力在绿色区域</PixelText>
-          <PixelText variant="caption" color={PIXEL_COLORS.uiTextDim}>太松鱼会跑，太紧线会断！</PixelText>
+          <PixelText variant="caption" color={PIXEL_COLORS.uiDanger}>太松鱼会跑，太紧线会断！</PixelText>
         </View>
 
-        <PixelButton title="开始钓鱼" onPress={onClose} style={{ marginTop: 16 }} />
-      </View>
+        <PixelButton title="开始钓鱼" onPress={onClose} style={{ marginTop: 16 }} icon="▸" />
+      </PixelCard>
     </View>
   );
 }
@@ -360,7 +381,6 @@ export default function FishingScreen() {
   >([]);
   const [showTutorial, setShowTutorial] = useState(false);
 
-  // Check if tutorial should be shown
   useEffect(() => {
     AsyncStorage.getItem(TUTORIAL_SHOWN_KEY).then((shown) => {
       if (!shown) {
@@ -382,7 +402,6 @@ export default function FishingScreen() {
   const castPowerRef = useRef(0);
 
   useEffect(() => {
-    // Show all 12 fish species swimming in the water
     const fish = FISH_SPECIES.map((f) => ({
       fish: f,
       x: Math.random() * (SCREEN_WIDTH - 60),
@@ -449,7 +468,6 @@ export default function FishingScreen() {
           if (useGameStore.getState().phase === 'bite') fishEscaped();
         }, 2500);
       } else {
-        // No fish attracted - show feedback then reset
         setPhase('no_bite');
         setTimeout(() => {
           if (useGameStore.getState().phase === 'no_bite') {
@@ -474,29 +492,19 @@ export default function FishingScreen() {
       const fish = state.currentFish;
       if (!fish) return;
 
-      // Fish pulls based on strength and remaining stamina (random bursts)
       const fishPull = fish.fightStrength * state.fishStamina * (0.3 + Math.random() * 0.7);
       const reelPull = state.reelSpeed * 0.8;
-
-      // Tension increases with reeling, decreases from fish pulling and natural slack
-      // Without reeling: tension drops (line goes slack → fish escapes)
-      // With reeling: tension rises (too much → line breaks)
       const tensionDelta = (reelPull - fishPull * 0.4) * 0.15;
-      // Natural decay toward 0 (slack) — must actively reel to maintain tension
       const slackDecay = -state.lineTension * 0.03;
       const newTension = Math.max(0, Math.min(1, state.lineTension + tensionDelta + slackDecay));
       updateTension(newTension);
 
-      // Stamina drains only when tension is in the sweet spot (0.3-0.7)
       let staminaDrain = 0;
       if (newTension >= 0.3 && newTension <= 0.7) {
-        // Perfect zone: maximum drain
         staminaDrain = 0.02 * (1 + fish.difficulty * 0.1);
       } else if (newTension > 0.7 && newTension < 0.85) {
-        // High tension: some drain but risky
         staminaDrain = 0.01;
       }
-      // Below 0.3 or above 0.85: no stamina drain (fish rests or line about to break)
 
       updateFishStamina(state.fishStamina - staminaDrain);
 
@@ -508,11 +516,9 @@ export default function FishingScreen() {
         discoverFish(fish.id, weight);
         catchFish();
       } else if (newTension >= 1) {
-        // Line breaks!
         if (gameLoop.current) clearInterval(gameLoop.current);
         fishEscaped();
       } else if (newTension <= 0.1 && state.reelSpeed < 0.1) {
-        // Line too slack and not reeling — fish unhooks
         if (gameLoop.current) clearInterval(gameLoop.current);
         fishEscaped();
       }
@@ -530,7 +536,6 @@ export default function FishingScreen() {
       },
       onPanResponderMove: (_, gesture) => {
         if (useGameStore.getState().phase === 'fighting') {
-          // Speed based on finger movement velocity — faster swipes = faster reeling
           const speed = Math.min(1, Math.sqrt(gesture.vx ** 2 + gesture.vy ** 2) * 0.4 + 0.2);
           useGameStore.setState({ reelSpeed: speed });
         }
@@ -563,21 +568,45 @@ export default function FishingScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.gameScene}>
-        {/* Sky */}
+        {/* Sky with gradient layers */}
         <View style={styles.sky}>
-          <View style={styles.sun} />
-          <View style={[styles.cloud, { top: 30, left: 40 }]} />
-          <View style={[styles.cloud, { top: 50, left: SCREEN_WIDTH - 100 }]} />
+          <View style={styles.skyGradTop} />
+          <View style={styles.skyGradMid} />
+          <View style={styles.skyGradBot} />
+          {/* Stars */}
+          {STARS.map((star, i) => (
+            <PixelStar key={i} {...star} />
+          ))}
+          {/* Sun */}
+          <View style={styles.sun}>
+            <View style={styles.sunCore} />
+            <View style={styles.sunGlow} />
+          </View>
+          {/* Clouds */}
+          <View style={[styles.cloud, { top: 25, left: 30 }]}>
+            <View style={styles.cloudBlock} />
+            <View style={[styles.cloudBlock, { width: 28, marginTop: -6, marginLeft: 8 }]} />
+          </View>
+          <View style={[styles.cloud, { top: 45, left: SCREEN_WIDTH - 110 }]}>
+            <View style={[styles.cloudBlock, { width: 24 }]} />
+            <View style={[styles.cloudBlock, { width: 32, marginTop: -6, marginLeft: 4 }]} />
+          </View>
         </View>
 
-        {/* Shore */}
+        {/* Shore with layered grass */}
         <View style={styles.shore}>
-          {Array.from({ length: 6 }, (_, i) => (
-            <View key={i} style={[styles.tree, { left: i * 70 + 10 }]}>
-              <View style={styles.treeTop} />
-              <View style={styles.treeTrunk} />
-            </View>
-          ))}
+          <View style={styles.grassTop} />
+          <View style={styles.grassBody}>
+            {Array.from({ length: 7 }, (_, i) => (
+              <View key={i} style={[styles.tree, { left: i * 60 + 5 }]}>
+                <View style={styles.treeCanopy}>
+                  <View style={styles.treeCanopyTop} />
+                  <View style={styles.treeCanopyMid} />
+                </View>
+                <View style={styles.treeTrunk} />
+              </View>
+            ))}
+          </View>
         </View>
 
         {/* Water */}
@@ -590,7 +619,7 @@ export default function FishingScreen() {
                 position: 'absolute',
                 left: sf.x,
                 top: sf.y - GAME_HEIGHT * 0.45,
-                opacity: 0.6,
+                opacity: 0.5,
                 transform: [{ scaleX: sf.dx > 0 ? 1 : -1 }],
               }}
             >
@@ -605,42 +634,50 @@ export default function FishingScreen() {
         {/* Rod */}
         <View style={styles.rod}>
           <View style={styles.rodLine} />
+          <View style={styles.rodTip} />
           <View style={styles.rodBody} />
           <View style={styles.rodHandle} />
         </View>
       </View>
 
-      {/* UI */}
+      {/* HUD Overlay */}
       <SafeAreaView style={styles.uiOverlay}>
+        {/* Score HUD - top bar */}
         <View style={styles.scoreBar}>
-          <PixelText variant="pixel" color={PIXEL_COLORS.uiHighlight}>得分: {score}</PixelText>
-          <PixelText variant="pixel" color={PIXEL_COLORS.uiText}>钓获: {totalCatches}</PixelText>
+          <View style={styles.scoreItem}>
+            <PixelText variant="pixel" color={PIXEL_COLORS.uiTextDim}>得分</PixelText>
+            <PixelText variant="pixel" color={PIXEL_COLORS.uiHighlight}>{score}</PixelText>
+          </View>
+          <View style={styles.scoreItem}>
+            <PixelText variant="pixel" color={PIXEL_COLORS.uiTextDim}>钓获</PixelText>
+            <PixelText variant="pixel" color={PIXEL_COLORS.uiText}>{totalCatches}</PixelText>
+          </View>
         </View>
 
         {phase === 'idle' && (
           <View style={styles.bottomUI}>
             <BaitSelector selectedBait={selectedBait} onSelect={selectBait} />
-            <PixelButton title="按此蓄力抛竿" onPress={startCasting} size="large" style={{ marginTop: 8 }} />
+            <PixelButton title="按此蓄力抛竿" onPress={startCasting} size="large" style={{ marginTop: 8 }} icon="▸" />
           </View>
         )}
 
         {phase === 'casting' && (
           <View style={styles.bottomUI}>
             <PowerMeter power={castPower} active={isCasting} />
-            <PixelButton title="松手抛竿！" onPress={releaseCast} variant="secondary" size="large" style={{ marginTop: 8 }} />
+            <PixelButton title="松手抛竿！" onPress={releaseCast} variant="secondary" size="large" style={{ marginTop: 8 }} icon="▸" />
           </View>
         )}
 
         {phase === 'waiting' && (
           <View style={styles.centerMessage}>
-            <PixelText variant="subtitle" color={PIXEL_COLORS.uiText}>等待鱼上钩...</PixelText>
+            <PixelText variant="pixel" color={PIXEL_COLORS.uiText}>等待鱼上钩 ...</PixelText>
             <PixelText variant="caption" style={{ marginTop: 4 }}>耐心等待浮漂信号</PixelText>
           </View>
         )}
 
         {phase === 'no_bite' && (
           <View style={styles.centerMessage}>
-            <PixelText variant="subtitle" color={PIXEL_COLORS.uiTextDim}>没有鱼上钩...</PixelText>
+            <PixelText variant="pixel" color={PIXEL_COLORS.uiTextDim}>没有鱼上钩...</PixelText>
             <PixelText variant="caption" style={{ marginTop: 4 }}>换个鱼饵试试？</PixelText>
           </View>
         )}
@@ -651,7 +688,7 @@ export default function FishingScreen() {
               <PixelText variant="title" color={PIXEL_COLORS.uiHighlight} style={{ fontSize: 28, textAlign: 'center' }}>
                 ！上钩了！
               </PixelText>
-              <PixelText variant="subtitle" color={PIXEL_COLORS.uiDanger} style={{ textAlign: 'center', marginTop: 8 }}>
+              <PixelText variant="pixel" color={PIXEL_COLORS.uiDanger} style={{ textAlign: 'center', marginTop: 8 }}>
                 快点击屏幕提竿！
               </PixelText>
             </View>
@@ -670,7 +707,9 @@ export default function FishingScreen() {
             <View style={styles.reelArea}>
               <PixelText variant="caption" style={{ textAlign: 'center' }}>在此区域滑动手指收线</PixelText>
               <View style={styles.reelCircle}>
-                <PixelText variant="pixel" color={PIXEL_COLORS.uiHighlight}>收线</PixelText>
+                <View style={styles.reelInner}>
+                  <PixelText variant="pixel" color={PIXEL_COLORS.uiHighlight}>收线</PixelText>
+                </View>
               </View>
             </View>
           </View>
@@ -681,7 +720,6 @@ export default function FishingScreen() {
         )}
         {phase === 'escaped' && <EscapeOverlay onContinue={handleContinue} />}
 
-        {/* Tutorial overlay for new players */}
         {showTutorial && <TutorialOverlay onClose={closeTutorial} />}
       </SafeAreaView>
     </View>
@@ -691,79 +729,193 @@ export default function FishingScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: PIXEL_COLORS.skyTop },
   gameScene: { flex: 1 },
-  sky: { height: '30%', backgroundColor: PIXEL_COLORS.skyBottom },
-  sun: {
-    position: 'absolute', right: 50, top: 30, width: 40, height: 40,
-    backgroundColor: PIXEL_COLORS.sunGlow,
-    boxShadow: `0px 0px 20px ${PIXEL_COLORS.sunGlow}CC`,
+
+  // Sky - layered gradient
+  sky: { height: '30%', position: 'relative', overflow: 'hidden' },
+  skyGradTop: { flex: 1, backgroundColor: PIXEL_COLORS.skyTop },
+  skyGradMid: { flex: 1, backgroundColor: PIXEL_COLORS.skyMid },
+  skyGradBot: { flex: 1, backgroundColor: PIXEL_COLORS.skyBottom },
+  sun: { position: 'absolute', right: 40, top: 20 },
+  sunCore: { width: 32, height: 32, backgroundColor: PIXEL_COLORS.sunGlow },
+  sunGlow: {
+    position: 'absolute', top: -8, left: -8, width: 48, height: 48,
+    backgroundColor: PIXEL_COLORS.sunGlow + '33',
   },
-  cloud: { position: 'absolute', width: 60, height: 20, backgroundColor: '#FFFFFF88' },
-  shore: { height: 50, backgroundColor: PIXEL_COLORS.envGrass, flexDirection: 'row', overflow: 'hidden' },
+  cloud: { position: 'absolute' },
+  cloudBlock: { width: 20, height: 12, backgroundColor: '#FFFFFF55' },
+
+  // Shore - layered grass
+  shore: { height: 55, overflow: 'hidden' },
+  grassTop: { height: 4, backgroundColor: PIXEL_COLORS.envGrassLight },
+  grassBody: {
+    flex: 1, backgroundColor: PIXEL_COLORS.envGrass,
+    flexDirection: 'row', overflow: 'hidden',
+    borderBottomWidth: 3, borderBottomColor: PIXEL_COLORS.envDirt,
+  },
   tree: { position: 'absolute', alignItems: 'center', bottom: 0 },
-  treeTop: { width: 24, height: 24, backgroundColor: PIXEL_COLORS.envGrass, borderWidth: 2, borderColor: '#3A6A1E' },
-  treeTrunk: { width: 6, height: 16, backgroundColor: PIXEL_COLORS.envWood },
+  treeCanopy: { alignItems: 'center' },
+  treeCanopyTop: { width: 16, height: 10, backgroundColor: PIXEL_COLORS.envGrassDark },
+  treeCanopyMid: { width: 24, height: 12, backgroundColor: PIXEL_COLORS.envGrass, marginTop: -2 },
+  treeTrunk: { width: 6, height: 14, backgroundColor: PIXEL_COLORS.envWoodDark },
+
+  // Water
   water: { flex: 1, backgroundColor: PIXEL_COLORS.waterDeep, position: 'relative', overflow: 'hidden' },
-  waveContainer: { position: 'absolute', top: 0, left: 0, right: 0, height: 50 },
-  waveLine: { position: 'absolute', left: -20, width: SCREEN_WIDTH + 40, height: 4 },
+  waveContainer: { position: 'absolute', top: 0, left: 0, right: 0, height: 55 },
+  waveLine: { position: 'absolute', left: -24, width: SCREEN_WIDTH + 48, height: 3 },
+
+  // Bobber
   bobberArea: { position: 'absolute', top: 20, left: '60%' },
   bobber: { alignItems: 'center' },
-  bobberTop: { width: 8, height: 12 },
-  bobberBottom: { width: 8, height: 8 },
-  bobberLine: { width: 2, height: 30, backgroundColor: '#FFFFFF44' },
-  rod: { position: 'absolute', right: 20, top: '25%', alignItems: 'flex-end' },
+  bobberTop: { width: 8, height: 10, backgroundColor: '#FF2222' },
+  bobberMid: { width: 10, height: 3, backgroundColor: '#FFFFFF' },
+  bobberBottom: { width: 8, height: 8, backgroundColor: '#EEEEEE' },
+  bobberLine: { width: 2, height: 30, backgroundColor: '#FFFFFF33' },
+
+  // Rod
+  rod: { position: 'absolute', right: 16, top: '22%', alignItems: 'flex-end' },
+  rodTip: { width: 2, height: 8, backgroundColor: '#FF4444', marginRight: 1 },
   rodBody: { width: 4, height: 120, backgroundColor: PIXEL_COLORS.envWood, transform: [{ rotate: '-30deg' }] },
-  rodHandle: { width: 8, height: 20, backgroundColor: '#333', marginTop: -4 },
-  rodLine: { position: 'absolute', width: 1, height: 160, backgroundColor: '#FFFFFF44', right: 2, top: -20, transform: [{ rotate: '15deg' }] },
+  rodHandle: { width: 8, height: 22, backgroundColor: '#222', marginTop: -4, borderWidth: 1, borderColor: '#444' },
+  rodLine: { position: 'absolute', width: 1, height: 160, backgroundColor: '#FFFFFF33', right: 2, top: -20, transform: [{ rotate: '15deg' }] },
+
+  // HUD
   uiOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
-  scoreBar: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: Platform.OS === 'ios' ? 50 : 16, paddingBottom: 8 },
-  bottomUI: { position: 'absolute', bottom: 80, left: 16, right: 16 },
-  baitSelector: { backgroundColor: PIXEL_COLORS.uiBg + 'DD', padding: 12, borderWidth: 2, borderColor: PIXEL_COLORS.uiBorder },
-  baitRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  baitItem: { alignItems: 'center', padding: 8, minWidth: 50, borderWidth: 2, borderColor: 'transparent' },
-  baitSelected: { borderColor: PIXEL_COLORS.uiHighlight, backgroundColor: PIXEL_COLORS.uiHighlight + '20' },
-  powerMeter: { alignItems: 'center', backgroundColor: PIXEL_COLORS.uiBg + 'DD', padding: 12, borderWidth: 2, borderColor: PIXEL_COLORS.uiBorder },
-  powerBarH: { width: '100%', height: 20, backgroundColor: PIXEL_COLORS.uiBg, borderWidth: 2, borderColor: PIXEL_COLORS.uiBorder, overflow: 'hidden' },
-  powerFillH: { height: '100%' },
-  centerMessage: { position: 'absolute', top: '40%', left: 0, right: 0, alignItems: 'center', backgroundColor: PIXEL_COLORS.uiBg + 'AA', padding: 16, marginHorizontal: 40, borderWidth: 2, borderColor: PIXEL_COLORS.uiBorder },
-  biteOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center' },
-  biteAlert: { backgroundColor: PIXEL_COLORS.uiBg + 'EE', padding: 32, borderWidth: 4, borderColor: PIXEL_COLORS.uiHighlight },
-  fightUI: { position: 'absolute', bottom: 80, left: 16, right: 16, backgroundColor: PIXEL_COLORS.uiBg + 'DD', padding: 12, borderWidth: 2, borderColor: PIXEL_COLORS.uiBorder },
-  tensionContainer: { marginBottom: 8 },
-  tensionBar: { width: '100%', height: 16, backgroundColor: PIXEL_COLORS.uiBg, borderWidth: 2, borderColor: PIXEL_COLORS.uiBorder, marginVertical: 4, overflow: 'hidden', position: 'relative' },
-  tensionFill: { height: '100%' },
-  tensionZone: {
-    position: 'absolute',
-    height: '100%',
+  scoreBar: {
+    flexDirection: 'row', justifyContent: 'space-between',
+    paddingHorizontal: 12, paddingTop: Platform.OS === 'ios' ? 50 : 12, paddingBottom: 6,
+    backgroundColor: PIXEL_COLORS.hudBg + 'BB',
+    borderBottomWidth: 2, borderBottomColor: PIXEL_COLORS.hudBorder + '66',
   },
+  scoreItem: { flexDirection: 'row', gap: 6, alignItems: 'center' },
+
+  // Bottom UI
+  bottomUI: { position: 'absolute', bottom: 80, left: 12, right: 12 },
+  baitSelector: {
+    backgroundColor: PIXEL_COLORS.hudBg + 'EE', padding: 12,
+    borderWidth: 3, borderColor: PIXEL_COLORS.windowOuter,
+  },
+  baitRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  baitItem: {
+    alignItems: 'center', padding: 8, minWidth: 48,
+    borderWidth: 2, borderColor: PIXEL_COLORS.hudInactive,
+    backgroundColor: PIXEL_COLORS.uiPanel + '88',
+  },
+  baitSelected: {
+    borderColor: PIXEL_COLORS.uiHighlight,
+    backgroundColor: PIXEL_COLORS.uiHighlight + '18',
+  },
+  baitArrow: { position: 'absolute', top: -10 },
+
+  // Power meter
+  powerMeter: {
+    backgroundColor: PIXEL_COLORS.hudBg + 'EE', padding: 12,
+    borderWidth: 3, borderColor: PIXEL_COLORS.windowOuter,
+  },
+  meterHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
+  powerBarH: {
+    width: '100%', height: 16,
+    backgroundColor: PIXEL_COLORS.hudBg, borderWidth: 2, borderColor: PIXEL_COLORS.hudBorder,
+    overflow: 'hidden',
+  },
+  powerFillH: { height: '100%' },
+
+  // Center messages
+  centerMessage: {
+    position: 'absolute', top: '40%', left: 0, right: 0, alignItems: 'center',
+    backgroundColor: PIXEL_COLORS.hudBg + 'CC', padding: 16, marginHorizontal: 40,
+    borderWidth: 3, borderColor: PIXEL_COLORS.windowOuter,
+  },
+
+  // Bite
+  biteOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center' },
+  biteAlert: {
+    backgroundColor: PIXEL_COLORS.hudBg + 'EE', padding: 32,
+    borderWidth: 4, borderColor: PIXEL_COLORS.uiHighlight,
+    boxShadow: `0px 0px 20px ${PIXEL_COLORS.uiHighlight}66`,
+  },
+
+  // Fight UI
+  fightUI: {
+    position: 'absolute', bottom: 80, left: 12, right: 12,
+    backgroundColor: PIXEL_COLORS.hudBg + 'EE', padding: 12,
+    borderWidth: 3, borderColor: PIXEL_COLORS.windowOuter,
+  },
+  tensionContainer: { marginBottom: 8 },
+  tensionBar: {
+    width: '100%', height: 16,
+    backgroundColor: PIXEL_COLORS.hudBg, borderWidth: 2, borderColor: PIXEL_COLORS.hudBorder,
+    marginVertical: 4, overflow: 'hidden', position: 'relative',
+  },
+  tensionFill: { height: '100%' },
+  tensionZone: { position: 'absolute', height: '100%' },
   tensionZoneSlack: {
-    left: 0,
-    width: '15%',
+    left: 0, width: '15%',
     backgroundColor: PIXEL_COLORS.uiInfo + '33',
-    borderRightWidth: 1,
-    borderColor: PIXEL_COLORS.uiInfo,
+    borderRightWidth: 1, borderColor: PIXEL_COLORS.uiInfo,
   },
   tensionZoneSweet: {
-    left: '30%',
-    width: '40%',
+    left: '30%', width: '40%',
     backgroundColor: PIXEL_COLORS.uiSuccess + '22',
-    borderLeftWidth: 2,
-    borderRightWidth: 2,
-    borderColor: PIXEL_COLORS.uiSuccess,
+    borderLeftWidth: 2, borderRightWidth: 2, borderColor: PIXEL_COLORS.uiSuccess,
   },
+
   staminaContainer: { marginBottom: 4 },
-  staminaBar: { width: '100%', height: 12, backgroundColor: PIXEL_COLORS.uiBg, borderWidth: 2, borderColor: PIXEL_COLORS.uiBorder, marginVertical: 4, overflow: 'hidden' },
+  staminaBar: {
+    width: '100%', height: 12,
+    backgroundColor: PIXEL_COLORS.hudBg, borderWidth: 2, borderColor: PIXEL_COLORS.hudBorder,
+    marginVertical: 4, overflow: 'hidden',
+  },
   staminaFill: { height: '100%' },
+
   reelArea: { marginTop: 12, alignItems: 'center' },
-  reelCircle: { width: 80, height: 80, borderWidth: 3, borderColor: PIXEL_COLORS.uiHighlight, borderRadius: 40, justifyContent: 'center', alignItems: 'center', marginTop: 8 },
-  overlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center', backgroundColor: '#00000088', padding: 20 },
-  catchCard: { width: '100%', maxWidth: 340, backgroundColor: PIXEL_COLORS.uiPanel },
-  escapeCard: { width: '100%', maxWidth: 300, backgroundColor: PIXEL_COLORS.uiPanel, alignItems: 'center', padding: 24 },
-  catchFishDisplay: { alignItems: 'center', justifyContent: 'center', height: 100, backgroundColor: PIXEL_COLORS.waterDeep + '44', marginTop: 8 },
+  reelCircle: {
+    width: 84, height: 84,
+    borderWidth: 3, borderColor: PIXEL_COLORS.uiHighlight,
+    justifyContent: 'center', alignItems: 'center', marginTop: 8,
+  },
+  reelInner: {
+    width: 60, height: 60,
+    borderWidth: 2, borderColor: PIXEL_COLORS.hudBorder,
+    justifyContent: 'center', alignItems: 'center',
+    backgroundColor: PIXEL_COLORS.uiHighlight + '11',
+  },
+
+  // Overlays
+  overlay: {
+    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+    justifyContent: 'center', alignItems: 'center',
+    backgroundColor: '#000000AA', padding: 20,
+  },
+  catchCard: { width: '100%', maxWidth: 340 },
+  escapeCard: { width: '100%', maxWidth: 300, alignItems: 'center' },
+  catchFishDisplay: {
+    alignItems: 'center', justifyContent: 'center', height: 100,
+    backgroundColor: PIXEL_COLORS.waterDeep + '44', marginTop: 8,
+    borderWidth: 2, borderColor: PIXEL_COLORS.hudBorder,
+  },
   newBadge: { alignItems: 'center', marginBottom: 8 },
-  catchStats: { flexDirection: 'row', justifyContent: 'space-around', marginTop: 12, paddingVertical: 8, borderTopWidth: 2, borderTopColor: PIXEL_COLORS.uiBorder },
+  catchStats: {
+    flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center',
+    marginTop: 12, paddingVertical: 8,
+    borderTopWidth: 2, borderTopColor: PIXEL_COLORS.hudBorder,
+  },
   catchStat: { alignItems: 'center' },
-  tipBox: { marginTop: 8, padding: 8, backgroundColor: PIXEL_COLORS.uiBg, borderWidth: 1, borderColor: PIXEL_COLORS.uiInfo + '44' },
-  tutorialOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center', backgroundColor: '#000000AA', padding: 20 },
-  tutorialCard: { width: '100%', maxWidth: 340, backgroundColor: PIXEL_COLORS.uiPanel, padding: 20, borderWidth: 4, borderColor: PIXEL_COLORS.uiHighlight },
-  tutorialStep: { marginBottom: 12, paddingLeft: 8, borderLeftWidth: 3, borderLeftColor: PIXEL_COLORS.uiHighlight },
+  catchStatDivider: { width: 2, height: 30, backgroundColor: PIXEL_COLORS.hudBorder },
+  tipBox: {
+    marginTop: 8, padding: 8,
+    backgroundColor: PIXEL_COLORS.hudBg,
+    borderWidth: 2, borderColor: PIXEL_COLORS.uiInfo + '44',
+  },
+
+  // Tutorial
+  tutorialOverlay: {
+    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+    justifyContent: 'center', alignItems: 'center',
+    backgroundColor: '#000000CC', padding: 20,
+  },
+  tutorialCard: { width: '100%', maxWidth: 340 },
+  tutorialStep: {
+    marginBottom: 12, paddingLeft: 10,
+    borderLeftWidth: 3, borderLeftColor: PIXEL_COLORS.uiHighlight,
+  },
 });

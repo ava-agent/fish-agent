@@ -22,6 +22,13 @@ const TYPE_LABELS: Record<string, string> = {
   website: '网站',
 };
 
+const TYPE_TAG_COLORS: Record<string, string> = {
+  forum: PIXEL_COLORS.rarityUncommon,
+  app: PIXEL_COLORS.rarityRare,
+  wechat: PIXEL_COLORS.uiSuccess,
+  website: PIXEL_COLORS.rarityLegendary,
+};
+
 export default function CommunityScreen() {
   const handleOpenLink = (url?: string) => {
     if (url) Linking.openURL(url);
@@ -29,64 +36,77 @@ export default function CommunityScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <PixelCard style={styles.introCard}>
-        <PixelText variant="subtitle" color={PIXEL_COLORS.uiHighlight}>
-          钓友圈子
-        </PixelText>
-        <PixelText variant="body" style={{ marginTop: 4 }}>
+      {/* Header banner */}
+      <PixelCard variant="highlight" style={styles.introCard}>
+        <View style={styles.introHeader}>
+          <PixelText variant="pixel" color={PIXEL_COLORS.hudActive}>
+            {'◆ 钓友圈子 ◆'}
+          </PixelText>
+        </View>
+        <View style={styles.introSeparator} />
+        <PixelText variant="body" style={{ marginTop: 8 }}>
           加入这些钓鱼社区，和钓友们交流经验、分享钓获！
         </PixelText>
       </PixelCard>
 
-      {COMMUNITIES.map((community) => (
-        <PixelCard key={community.id} style={styles.communityCard}>
-          <View style={styles.communityHeader}>
-            <MaterialCommunityIcons
-              name={TYPE_ICONS[community.type] as any}
-              size={24}
-              color={PIXEL_COLORS.uiHighlight}
-            />
-            <View style={{ marginLeft: 10, flex: 1 }}>
-              <PixelText variant="subtitle">{community.name}</PixelText>
-              <View style={styles.typeBadge}>
-                <PixelText variant="caption" color={PIXEL_COLORS.uiInfo} style={{ fontSize: 10 }}>
-                  {TYPE_LABELS[community.type]}
-                </PixelText>
+      {COMMUNITIES.map((community) => {
+        const tagColor = TYPE_TAG_COLORS[community.type] || PIXEL_COLORS.uiInfo;
+
+        return (
+          <PixelCard key={community.id} style={styles.communityCard}>
+            <View style={styles.communityHeader}>
+              <View style={styles.iconFrame}>
+                <MaterialCommunityIcons
+                  name={TYPE_ICONS[community.type] as any}
+                  size={22}
+                  color={PIXEL_COLORS.hudActive}
+                />
+              </View>
+              <View style={{ marginLeft: 10, flex: 1 }}>
+                <PixelText variant="subtitle">{community.name}</PixelText>
+                <View style={[styles.typeBadge, { borderColor: tagColor + '88' }]}>
+                  <PixelText variant="caption" color={tagColor} style={{ fontSize: 10, letterSpacing: 1 }}>
+                    {'['}{TYPE_LABELS[community.type]}{']'}
+                  </PixelText>
+                </View>
               </View>
             </View>
-          </View>
 
-          <PixelText variant="body" style={{ marginTop: 8 }}>
-            {community.description}
-          </PixelText>
+            <PixelText variant="body" style={{ marginTop: 8 }}>
+              {community.description}
+            </PixelText>
 
-          <View style={styles.featureTags}>
-            {community.features.map((feature, i) => (
-              <View key={i} style={styles.featureTag}>
-                <PixelText variant="caption" style={{ fontSize: 10 }}>
-                  {feature}
-                </PixelText>
-              </View>
-            ))}
-          </View>
+            <View style={styles.featureTags}>
+              {community.features.map((feature, i) => (
+                <View key={i} style={styles.featureTag}>
+                  <PixelText variant="caption" color={PIXEL_COLORS.rarityUncommon} style={{ fontSize: 10, letterSpacing: 1 }}>
+                    {'◇ '}{feature}
+                  </PixelText>
+                </View>
+              ))}
+            </View>
 
-          {community.url && (
-            <TouchableOpacity
-              style={styles.linkBtn}
-              onPress={() => handleOpenLink(community.url)}
-            >
-              <MaterialCommunityIcons name="open-in-new" size={14} color={PIXEL_COLORS.uiInfo} />
-              <PixelText variant="caption" color={PIXEL_COLORS.uiInfo} style={{ marginLeft: 4 }}>
-                前往访问
-              </PixelText>
-            </TouchableOpacity>
-          )}
-        </PixelCard>
-      ))}
+            {community.url && (
+              <TouchableOpacity
+                style={styles.linkBtn}
+                onPress={() => handleOpenLink(community.url)}
+              >
+                <View style={styles.linkInner}>
+                  <PixelText variant="pixel" color={PIXEL_COLORS.hudActive} style={{ fontSize: 11 }}>
+                    {'▸ '}前往访问
+                  </PixelText>
+                  <MaterialCommunityIcons name="open-in-new" size={12} color={PIXEL_COLORS.hudActive} />
+                </View>
+              </TouchableOpacity>
+            )}
+          </PixelCard>
+        );
+      })}
 
       {/* Fishing spots link */}
       <PixelButton
         title="查看钓点推荐"
+        icon="◈"
         onPress={() => router.push('/community/spots' as any)}
         size="large"
         style={{ marginTop: 8 }}
@@ -99,21 +119,56 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: PIXEL_COLORS.uiBg },
   content: { padding: 16, paddingBottom: 32 },
   introCard: { marginBottom: 16 },
+  introHeader: {
+    alignItems: 'center',
+    paddingBottom: 4,
+  },
+  introSeparator: {
+    height: 2,
+    backgroundColor: PIXEL_COLORS.hudActive + '44',
+    marginHorizontal: 20,
+  },
   communityCard: { marginBottom: 12 },
   communityHeader: { flexDirection: 'row', alignItems: 'center' },
-  typeBadge: {
-    paddingHorizontal: 6, paddingVertical: 1, marginTop: 2,
-    backgroundColor: PIXEL_COLORS.uiInfo + '20', alignSelf: 'flex-start',
-    borderWidth: 1, borderColor: PIXEL_COLORS.uiInfo + '44',
+  iconFrame: {
+    width: 40,
+    height: 40,
+    backgroundColor: PIXEL_COLORS.hudBg,
+    borderWidth: 2,
+    borderColor: PIXEL_COLORS.hudBorder,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  featureTags: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 8 },
+  typeBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    marginTop: 3,
+    alignSelf: 'flex-start',
+    backgroundColor: PIXEL_COLORS.windowOuter,
+    borderWidth: 1,
+  },
+  featureTags: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 10 },
   featureTag: {
-    paddingHorizontal: 8, paddingVertical: 2,
-    backgroundColor: PIXEL_COLORS.uiBg, borderWidth: 1, borderColor: PIXEL_COLORS.uiBorder,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    backgroundColor: PIXEL_COLORS.hudBg,
+    borderWidth: 1,
+    borderColor: PIXEL_COLORS.hudBorder,
   },
   linkBtn: {
-    flexDirection: 'row', alignItems: 'center',
-    marginTop: 8, paddingTop: 8,
-    borderTopWidth: 1, borderTopColor: PIXEL_COLORS.uiBorder + '44',
+    marginTop: 10,
+    paddingTop: 8,
+    borderTopWidth: 2,
+    borderTopColor: PIXEL_COLORS.windowOuter,
+  },
+  linkInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    backgroundColor: PIXEL_COLORS.hudBg,
+    borderWidth: 1,
+    borderColor: PIXEL_COLORS.hudBorder,
   },
 });

@@ -1,5 +1,5 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, ViewStyle } from 'react-native';
+import { TouchableOpacity, View, Text, StyleSheet, ViewStyle } from 'react-native';
 import { PIXEL_COLORS } from '../../theme/colors';
 
 interface PixelButtonProps {
@@ -9,6 +9,7 @@ interface PixelButtonProps {
   size?: 'small' | 'medium' | 'large';
   disabled?: boolean;
   style?: ViewStyle;
+  icon?: string;
 }
 
 export function PixelButton({
@@ -18,6 +19,7 @@ export function PixelButton({
   size = 'medium',
   disabled = false,
   style,
+  icon,
 }: PixelButtonProps) {
   const bgColor =
     variant === 'primary'
@@ -27,56 +29,92 @@ export function PixelButton({
       : PIXEL_COLORS.uiPanel;
 
   const textColor =
-    variant === 'primary' ? PIXEL_COLORS.uiBg : PIXEL_COLORS.uiText;
+    variant === 'primary' ? PIXEL_COLORS.windowOuter : PIXEL_COLORS.uiText;
 
-  const paddingH = size === 'small' ? 12 : size === 'large' ? 24 : 16;
+  const borderColor =
+    variant === 'primary' ? '#B8960A'
+    : variant === 'danger' ? '#AA2222'
+    : PIXEL_COLORS.uiBorder;
+
+  const paddingH = size === 'small' ? 12 : size === 'large' ? 28 : 20;
   const paddingV = size === 'small' ? 6 : size === 'large' ? 14 : 10;
-  const fontSize = size === 'small' ? 11 : size === 'large' ? 16 : 13;
+  const fontSize = size === 'small' ? 11 : size === 'large' ? 15 : 13;
 
   return (
     <TouchableOpacity
       onPress={onPress}
       disabled={disabled}
       activeOpacity={0.7}
-      style={[
-        styles.button,
-        {
-          backgroundColor: disabled ? PIXEL_COLORS.uiBorder : bgColor,
-          paddingHorizontal: paddingH,
-          paddingVertical: paddingV,
-          borderColor: disabled ? PIXEL_COLORS.uiBorder : PIXEL_COLORS.uiBorder,
-        },
-        style,
-      ]}
+      style={[style]}
     >
-      <Text
+      {/* Outer border (shadow) */}
+      <View
         style={[
-          styles.text,
+          styles.outer,
           {
-            color: disabled ? PIXEL_COLORS.uiTextDim : textColor,
-            fontSize,
+            backgroundColor: disabled ? PIXEL_COLORS.hudInactive : '#0D0A14',
           },
         ]}
       >
-        {title}
-      </Text>
+        {/* Inner button */}
+        <View
+          style={[
+            styles.inner,
+            {
+              backgroundColor: disabled ? PIXEL_COLORS.uiBorder : bgColor,
+              borderColor: disabled ? PIXEL_COLORS.hudInactive : borderColor,
+              paddingHorizontal: paddingH,
+              paddingVertical: paddingV,
+            },
+          ]}
+        >
+          {/* Top shine line */}
+          <View style={[
+            styles.shineLine,
+            { backgroundColor: variant === 'primary' ? '#FFE85A' : PIXEL_COLORS.windowShine + '33' },
+          ]} />
+          <Text
+            style={[
+              styles.text,
+              {
+                color: disabled ? PIXEL_COLORS.uiTextDim : textColor,
+                fontSize,
+              },
+            ]}
+          >
+            {icon ? `${icon} ` : ''}{title}
+          </Text>
+        </View>
+      </View>
     </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
-  button: {
-    borderWidth: 3,
+  outer: {
+    padding: 3,
+  },
+  inner: {
+    borderWidth: 2,
     borderRadius: 0,
     alignItems: 'center',
     justifyContent: 'center',
-    // Pixel shadow effect
-    boxShadow: '3px 3px 0px rgba(0, 0, 0, 0.5)',
-    elevation: 3,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  shineLine: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 2,
   },
   text: {
     fontFamily: 'SpaceMono',
     fontWeight: 'bold',
     letterSpacing: 1,
+    textShadowColor: '#00000066',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 0,
   },
 });

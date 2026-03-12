@@ -36,15 +36,20 @@ const styles = StyleSheet.create({
   base: {
     fontFamily: 'SpaceMono',
     color: PIXEL_COLORS.uiText,
+    textShadowColor: '#000000',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 0,
   },
   title: {
     fontSize: 20,
     fontWeight: 'bold',
-    letterSpacing: 1,
+    letterSpacing: 2,
+    textShadowOffset: { width: 2, height: 2 },
   },
   subtitle: {
     fontSize: 16,
     fontWeight: '600',
+    letterSpacing: 1,
   },
   body: {
     fontSize: 13,
@@ -57,5 +62,6 @@ const styles = StyleSheet.create({
   pixel: {
     fontSize: 12,
     letterSpacing: 2,
+    textTransform: 'uppercase',
   },
 });

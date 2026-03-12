@@ -8,7 +8,6 @@ import { useFishDexStore } from '../../../src/stores/useFishDexStore';
 import { FISH_SPECIES } from '../../../src/data/fish-species';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const CHART_WIDTH = SCREEN_WIDTH - 64;
 
 export default function StatsScreen() {
   const { records, getTotalCatches, getBiggestCatch } = useRecordStore();
@@ -40,89 +39,148 @@ export default function StatsScreen() {
   const months = Object.entries(monthlyCounts).sort(([a], [b]) => a.localeCompare(b)).slice(-6);
   const maxMonthly = months.length > 0 ? Math.max(...months.map(([, v]) => v)) : 1;
 
+  const BAR_COLORS = [
+    PIXEL_COLORS.rarityLegendary,
+    PIXEL_COLORS.rarityRare,
+    PIXEL_COLORS.rarityUncommon,
+    PIXEL_COLORS.rarityUncommon,
+    PIXEL_COLORS.rarityCommon,
+  ];
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {/* Overview stats */}
+      {/* Title */}
+      <View style={styles.pageTitle}>
+        <PixelText variant="pixel" color={PIXEL_COLORS.hudActive} style={{ fontSize: 11, textAlign: 'center' }}>
+          {'◆ 冒险者状态 ◆'}
+        </PixelText>
+      </View>
+
+      {/* Overview stats - RPG status cards */}
       <View style={styles.overviewGrid}>
-        <PixelCard style={styles.overviewCard}>
-          <PixelText variant="caption" color={PIXEL_COLORS.uiTextDim}>出钓次数</PixelText>
-          <PixelText variant="title" color={PIXEL_COLORS.uiHighlight}>{records.length}</PixelText>
+        <PixelCard variant="dark" style={styles.overviewCard}>
+          <View style={styles.statusIcon}>
+            <PixelText variant="pixel" color={PIXEL_COLORS.hudActive} style={{ fontSize: 14 }}>⚔</PixelText>
+          </View>
+          <PixelText variant="pixel" color={PIXEL_COLORS.uiTextDim} style={{ fontSize: 9, marginTop: 4 }}>
+            出钓次数
+          </PixelText>
+          <PixelText variant="title" color={PIXEL_COLORS.hudActive}>{records.length}</PixelText>
         </PixelCard>
-        <PixelCard style={styles.overviewCard}>
-          <PixelText variant="caption" color={PIXEL_COLORS.uiTextDim}>总钓获</PixelText>
-          <PixelText variant="title" color={PIXEL_COLORS.uiHighlight}>{totalCatches}</PixelText>
+        <PixelCard variant="dark" style={styles.overviewCard}>
+          <View style={styles.statusIcon}>
+            <PixelText variant="pixel" color={PIXEL_COLORS.rarityUncommon} style={{ fontSize: 14 }}>◆</PixelText>
+          </View>
+          <PixelText variant="pixel" color={PIXEL_COLORS.uiTextDim} style={{ fontSize: 9, marginTop: 4 }}>
+            总钓获
+          </PixelText>
+          <PixelText variant="title" color={PIXEL_COLORS.hudActive}>{totalCatches}</PixelText>
         </PixelCard>
-        <PixelCard style={styles.overviewCard}>
-          <PixelText variant="caption" color={PIXEL_COLORS.uiTextDim}>总时长</PixelText>
-          <PixelText variant="title" color={PIXEL_COLORS.uiHighlight}>
+        <PixelCard variant="dark" style={styles.overviewCard}>
+          <View style={styles.statusIcon}>
+            <PixelText variant="pixel" color={PIXEL_COLORS.rarityRare} style={{ fontSize: 14 }}>◈</PixelText>
+          </View>
+          <PixelText variant="pixel" color={PIXEL_COLORS.uiTextDim} style={{ fontSize: 9, marginTop: 4 }}>
+            总时长
+          </PixelText>
+          <PixelText variant="title" color={PIXEL_COLORS.hudActive}>
             {totalDuration >= 60 ? `${Math.round(totalDuration / 60)}h` : `${totalDuration}m`}
           </PixelText>
         </PixelCard>
-        <PixelCard style={styles.overviewCard}>
-          <PixelText variant="caption" color={PIXEL_COLORS.uiTextDim}>图鉴进度</PixelText>
-          <PixelText variant="title" color={PIXEL_COLORS.uiHighlight}>
+        <PixelCard variant="dark" style={styles.overviewCard}>
+          <View style={styles.statusIcon}>
+            <PixelText variant="pixel" color={PIXEL_COLORS.rarityLegendary} style={{ fontSize: 14 }}>★</PixelText>
+          </View>
+          <PixelText variant="pixel" color={PIXEL_COLORS.uiTextDim} style={{ fontSize: 9, marginTop: 4 }}>
+            图鉴进度
+          </PixelText>
+          <PixelText variant="title" color={PIXEL_COLORS.hudActive}>
             {getTotalDiscovered()}/{FISH_SPECIES.length}
           </PixelText>
         </PixelCard>
       </View>
 
       {biggest && (
-        <PixelCard style={styles.section}>
-          <PixelText variant="subtitle" color={PIXEL_COLORS.uiHighlight}>最大钓获</PixelText>
-          <PixelText variant="title" style={{ marginTop: 4 }}>
+        <PixelCard variant="highlight" style={styles.section}>
+          <View style={styles.sectionTitleRow}>
+            <PixelText variant="pixel" color={PIXEL_COLORS.hudActive} style={{ fontSize: 10 }}>
+              {'═══ '}★ 最大钓获 ★{' ═══'}
+            </PixelText>
+          </View>
+          <PixelText variant="title" style={{ marginTop: 6, textAlign: 'center' }}>
             {biggest.fishName} - {biggest.weight.toFixed(1)}kg
           </PixelText>
         </PixelCard>
       )}
 
-      {/* Top fish chart */}
+      {/* Top fish chart - HP/EXP bar style */}
       {topFish.length > 0 && (
         <PixelCard style={styles.section}>
-          <PixelText variant="subtitle" style={{ marginBottom: 12 }}>最常钓获</PixelText>
-          {topFish.map(([name, count], i) => (
-            <View key={i} style={styles.barRow}>
-              <PixelText variant="caption" style={styles.barLabel} numberOfLines={1}>
-                {name}
-              </PixelText>
-              <View style={styles.barTrack}>
-                <View
-                  style={[
-                    styles.barFill,
-                    {
-                      width: `${(count / maxCount) * 100}%`,
-                      backgroundColor: i === 0 ? PIXEL_COLORS.uiHighlight : PIXEL_COLORS.uiInfo,
-                    },
-                  ]}
-                />
-              </View>
-              <PixelText variant="caption" color={PIXEL_COLORS.uiHighlight} style={styles.barValue}>
-                {count}
-              </PixelText>
-            </View>
-          ))}
+          <View style={styles.sectionTitleRow}>
+            <PixelText variant="pixel" color={PIXEL_COLORS.hudActive} style={{ fontSize: 10 }}>
+              {'═══ 最常钓获 ═══'}
+            </PixelText>
+          </View>
+          <View style={{ marginTop: 8 }}>
+            {topFish.map(([name, count], i) => {
+              const barColor = BAR_COLORS[i] || PIXEL_COLORS.rarityCommon;
+              return (
+                <View key={i} style={styles.barRow}>
+                  <PixelText variant="pixel" style={styles.barLabel} numberOfLines={1} color={PIXEL_COLORS.uiText}>
+                    {name}
+                  </PixelText>
+                  <View style={styles.barTrack}>
+                    <View style={styles.barTrackInner}>
+                      <View
+                        style={[
+                          styles.barFill,
+                          {
+                            width: `${(count / maxCount) * 100}%`,
+                            backgroundColor: barColor,
+                          },
+                        ]}
+                      />
+                      <View style={[styles.barFillShine, { width: `${(count / maxCount) * 100}%` }]} />
+                    </View>
+                  </View>
+                  <View style={styles.barValueFrame}>
+                    <PixelText variant="pixel" color={barColor} style={{ fontSize: 10 }}>
+                      {count}
+                    </PixelText>
+                  </View>
+                </View>
+              );
+            })}
+          </View>
         </PixelCard>
       )}
 
-      {/* Monthly activity */}
+      {/* Monthly activity - game-styled bars */}
       {months.length > 0 && (
         <PixelCard style={styles.section}>
-          <PixelText variant="subtitle" style={{ marginBottom: 12 }}>月度活跃</PixelText>
+          <View style={styles.sectionTitleRow}>
+            <PixelText variant="pixel" color={PIXEL_COLORS.hudActive} style={{ fontSize: 10 }}>
+              {'═══ 月度活跃 ═══'}
+            </PixelText>
+          </View>
           <View style={styles.monthChart}>
             {months.map(([month, count], i) => (
               <View key={i} style={styles.monthBar}>
+                <PixelText variant="pixel" color={PIXEL_COLORS.hudActive} style={{ fontSize: 9, marginBottom: 4 }}>
+                  {count}
+                </PixelText>
                 <View style={styles.monthBarTrack}>
                   <View
                     style={[
                       styles.monthBarFill,
                       { height: `${(count / maxMonthly) * 100}%` },
                     ]}
-                  />
+                  >
+                    <View style={styles.monthBarShine} />
+                  </View>
                 </View>
-                <PixelText variant="caption" style={{ fontSize: 9, marginTop: 4 }}>
+                <PixelText variant="pixel" color={PIXEL_COLORS.uiTextDim} style={{ fontSize: 9, marginTop: 4 }}>
                   {month.slice(5)}月
-                </PixelText>
-                <PixelText variant="caption" color={PIXEL_COLORS.uiHighlight} style={{ fontSize: 9 }}>
-                  {count}
                 </PixelText>
               </View>
             ))}
@@ -130,23 +188,38 @@ export default function StatsScreen() {
         </PixelCard>
       )}
 
-      {/* Collection progress */}
+      {/* Collection progress - achievement dots */}
       <PixelCard style={styles.section}>
-        <PixelText variant="subtitle" style={{ marginBottom: 8 }}>图鉴收集</PixelText>
+        <View style={styles.sectionTitleRow}>
+          <PixelText variant="pixel" color={PIXEL_COLORS.hudActive} style={{ fontSize: 10 }}>
+            {'═══ 图鉴收集 ═══'}
+          </PixelText>
+        </View>
         <View style={styles.collectionGrid}>
           {FISH_SPECIES.map((fish) => {
             const discovered = !!entries[fish.id]?.discovered;
             return (
               <View
                 key={fish.id}
-                style={[styles.collectionDot, { backgroundColor: discovered ? PIXEL_COLORS.uiHighlight : PIXEL_COLORS.uiBorder }]}
-              />
+                style={[
+                  styles.collectionDot,
+                  {
+                    backgroundColor: discovered ? PIXEL_COLORS.hudActive : PIXEL_COLORS.hudBg,
+                    borderColor: discovered ? PIXEL_COLORS.hudActive + '88' : PIXEL_COLORS.hudBorder,
+                  },
+                ]}
+              >
+                {discovered && <View style={styles.dotShine} />}
+              </View>
             );
           })}
         </View>
-        <PixelText variant="caption" color={PIXEL_COLORS.uiTextDim} style={{ marginTop: 8, textAlign: 'center' }}>
-          已发现 {getTotalDiscovered()} / {FISH_SPECIES.length} 种鱼类
-        </PixelText>
+        <View style={styles.collectionFooter}>
+          <View style={styles.collectionSeparator} />
+          <PixelText variant="pixel" color={PIXEL_COLORS.uiTextDim} style={{ fontSize: 9, textAlign: 'center', marginTop: 8 }}>
+            已发现 {getTotalDiscovered()} / {FISH_SPECIES.length} 种鱼类
+          </PixelText>
+        </View>
       </PixelCard>
     </ScrollView>
   );
@@ -155,25 +228,117 @@ export default function StatsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: PIXEL_COLORS.uiBg },
   content: { padding: 16, paddingBottom: 32 },
+  pageTitle: {
+    paddingVertical: 8,
+    marginBottom: 12,
+    borderBottomWidth: 2,
+    borderBottomColor: PIXEL_COLORS.windowOuter,
+  },
   overviewGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
   overviewCard: { width: (SCREEN_WIDTH - 48) / 2, alignItems: 'center', padding: 12 },
-  section: { marginBottom: 12 },
-  barRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
-  barLabel: { width: 60, fontSize: 10 },
-  barTrack: {
-    flex: 1, height: 14, backgroundColor: PIXEL_COLORS.uiBg,
-    borderWidth: 1, borderColor: PIXEL_COLORS.uiBorder, overflow: 'hidden', marginHorizontal: 8,
+  statusIcon: {
+    width: 28,
+    height: 28,
+    backgroundColor: PIXEL_COLORS.windowOuter,
+    borderWidth: 1,
+    borderColor: PIXEL_COLORS.hudBorder,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  barFill: { height: '100%' },
-  barValue: { width: 24, textAlign: 'right', fontSize: 11 },
-  monthChart: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'flex-end', height: 100 },
+  section: { marginBottom: 12 },
+  sectionTitleRow: {
+    alignItems: 'center',
+    paddingBottom: 4,
+  },
+  barRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
+  barLabel: { width: 60, fontSize: 9 },
+  barTrack: {
+    flex: 1,
+    height: 18,
+    padding: 2,
+    backgroundColor: PIXEL_COLORS.windowOuter,
+    marginHorizontal: 8,
+  },
+  barTrackInner: {
+    flex: 1,
+    height: '100%',
+    backgroundColor: PIXEL_COLORS.hudBg,
+    borderWidth: 1,
+    borderColor: PIXEL_COLORS.hudBorder,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  barFill: {
+    height: '100%',
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+  },
+  barFillShine: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    height: 4,
+    backgroundColor: '#FFFFFF22',
+  },
+  barValueFrame: {
+    width: 30,
+    alignItems: 'flex-end',
+  },
+  monthChart: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'flex-end',
+    height: 120,
+    marginTop: 8,
+    paddingHorizontal: 4,
+  },
   monthBar: { alignItems: 'center', flex: 1 },
   monthBarTrack: {
-    width: 20, height: 70, backgroundColor: PIXEL_COLORS.uiBg,
-    borderWidth: 1, borderColor: PIXEL_COLORS.uiBorder,
-    justifyContent: 'flex-end', overflow: 'hidden',
+    width: 22,
+    height: 80,
+    padding: 2,
+    backgroundColor: PIXEL_COLORS.windowOuter,
+    justifyContent: 'flex-end',
+    overflow: 'hidden',
   },
-  monthBarFill: { width: '100%', backgroundColor: PIXEL_COLORS.uiInfo },
-  collectionGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  collectionDot: { width: 16, height: 16, borderWidth: 1, borderColor: PIXEL_COLORS.uiBorder },
+  monthBarFill: {
+    width: '100%',
+    backgroundColor: PIXEL_COLORS.rarityUncommon,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  monthBarShine: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 3,
+    backgroundColor: '#FFFFFF33',
+  },
+  collectionGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 8 },
+  collectionDot: {
+    width: 18,
+    height: 18,
+    borderWidth: 2,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  dotShine: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 4,
+    backgroundColor: '#FFFFFF33',
+  },
+  collectionFooter: {
+    marginTop: 4,
+  },
+  collectionSeparator: {
+    height: 2,
+    backgroundColor: PIXEL_COLORS.windowOuter,
+    marginTop: 8,
+  },
 });

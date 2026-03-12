@@ -73,19 +73,31 @@ export default function NewRecordScreen() {
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* Location */}
       <PixelCard style={styles.section}>
-        <PixelText variant="subtitle" style={{ marginBottom: 8 }}>钓鱼地点</PixelText>
-        <TextInput
-          style={styles.input}
-          value={location}
-          onChangeText={setLocation}
-          placeholder="例如：XX水库、XX河段..."
-          placeholderTextColor={PIXEL_COLORS.uiTextDim}
-        />
+        <View style={styles.sectionHeader}>
+          <PixelText variant="pixel" color={PIXEL_COLORS.hudActive} style={{ fontSize: 10 }}>
+            {'▣ '}
+          </PixelText>
+          <PixelText variant="subtitle">钓鱼地点</PixelText>
+        </View>
+        <View style={styles.inputFrame}>
+          <TextInput
+            style={styles.input}
+            value={location}
+            onChangeText={setLocation}
+            placeholder="例如：XX水库、XX河段..."
+            placeholderTextColor={PIXEL_COLORS.hudInactive}
+          />
+        </View>
       </PixelCard>
 
       {/* Weather */}
       <PixelCard style={styles.section}>
-        <PixelText variant="subtitle" style={{ marginBottom: 8 }}>天气</PixelText>
+        <View style={styles.sectionHeader}>
+          <PixelText variant="pixel" color={PIXEL_COLORS.hudActive} style={{ fontSize: 10 }}>
+            {'▣ '}
+          </PixelText>
+          <PixelText variant="subtitle">天气</PixelText>
+        </View>
         <View style={styles.weatherRow}>
           {WEATHERS.map((w) => (
             <TouchableOpacity
@@ -93,10 +105,12 @@ export default function NewRecordScreen() {
               onPress={() => setWeather(w.key)}
               style={[styles.weatherBtn, weather === w.key && styles.weatherActive]}
             >
+              {weather === w.key && <View style={styles.weatherShine} />}
               <PixelText variant="body" style={{ fontSize: 20 }}>{w.icon}</PixelText>
               <PixelText
-                variant="caption"
-                color={weather === w.key ? PIXEL_COLORS.uiHighlight : PIXEL_COLORS.uiTextDim}
+                variant="pixel"
+                color={weather === w.key ? PIXEL_COLORS.hudActive : PIXEL_COLORS.hudInactive}
+                style={{ fontSize: 10, marginTop: 2 }}
               >
                 {w.label}
               </PixelText>
@@ -107,31 +121,50 @@ export default function NewRecordScreen() {
 
       {/* Duration */}
       <PixelCard style={styles.section}>
-        <PixelText variant="subtitle" style={{ marginBottom: 8 }}>钓鱼时长（分钟）</PixelText>
-        <TextInput
-          style={styles.input}
-          value={duration}
-          onChangeText={setDuration}
-          keyboardType="numeric"
-          placeholder="60"
-          placeholderTextColor={PIXEL_COLORS.uiTextDim}
-        />
+        <View style={styles.sectionHeader}>
+          <PixelText variant="pixel" color={PIXEL_COLORS.hudActive} style={{ fontSize: 10 }}>
+            {'▣ '}
+          </PixelText>
+          <PixelText variant="subtitle">钓鱼时长（分钟）</PixelText>
+        </View>
+        <View style={styles.inputFrame}>
+          <TextInput
+            style={styles.input}
+            value={duration}
+            onChangeText={setDuration}
+            keyboardType="numeric"
+            placeholder="60"
+            placeholderTextColor={PIXEL_COLORS.hudInactive}
+          />
+        </View>
       </PixelCard>
 
       {/* Catches */}
       <PixelCard style={styles.section}>
-        <PixelText variant="subtitle" style={{ marginBottom: 8 }}>钓获记录</PixelText>
+        <View style={styles.sectionHeader}>
+          <PixelText variant="pixel" color={PIXEL_COLORS.hudActive} style={{ fontSize: 10 }}>
+            {'▣ '}
+          </PixelText>
+          <PixelText variant="subtitle">钓获记录</PixelText>
+        </View>
 
         {catches.map((c, i) => (
           <View key={i} style={styles.catchItem}>
-            <PixelText variant="caption">{c.fishName} - {c.weight}kg</PixelText>
-            <TouchableOpacity onPress={() => removeCatch(i)}>
-              <PixelText variant="caption" color={PIXEL_COLORS.uiDanger}>删除</PixelText>
+            <PixelText variant="caption" color={PIXEL_COLORS.rarityUncommon} style={{ fontSize: 11 }}>
+              {'◆ '}{c.fishName} - {c.weight}kg
+            </PixelText>
+            <TouchableOpacity onPress={() => removeCatch(i)} style={styles.catchDeleteBtn}>
+              <PixelText variant="pixel" color={PIXEL_COLORS.uiDanger} style={{ fontSize: 9 }}>
+                {'✕'}
+              </PixelText>
             </TouchableOpacity>
           </View>
         ))}
 
         <View style={styles.addCatchRow}>
+          <PixelText variant="pixel" color={PIXEL_COLORS.uiTextDim} style={{ fontSize: 9, marginBottom: 6 }}>
+            {'═══ 选择鱼种 ═══'}
+          </PixelText>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.fishPicker}>
             {FISH_SPECIES.map((fish) => (
               <TouchableOpacity
@@ -139,10 +172,11 @@ export default function NewRecordScreen() {
                 onPress={() => setSelectedFish(fish.id)}
                 style={[styles.fishOption, selectedFish === fish.id && styles.fishOptionActive]}
               >
+                {selectedFish === fish.id && <View style={styles.fishOptionShine} />}
                 <PixelText
                   variant="caption"
-                  style={{ fontSize: 10 }}
-                  color={selectedFish === fish.id ? PIXEL_COLORS.uiHighlight : PIXEL_COLORS.uiTextDim}
+                  style={{ fontSize: 10, letterSpacing: 1 }}
+                  color={selectedFish === fish.id ? PIXEL_COLORS.hudActive : PIXEL_COLORS.uiTextDim}
                 >
                   {fish.nameCn}
                 </PixelText>
@@ -150,16 +184,19 @@ export default function NewRecordScreen() {
             ))}
           </ScrollView>
           <View style={styles.addCatchInputRow}>
-            <TextInput
-              style={[styles.input, { flex: 1 }]}
-              value={catchWeight}
-              onChangeText={setCatchWeight}
-              keyboardType="decimal-pad"
-              placeholder="重量(kg)"
-              placeholderTextColor={PIXEL_COLORS.uiTextDim}
-            />
+            <View style={[styles.inputFrame, { flex: 1 }]}>
+              <TextInput
+                style={styles.input}
+                value={catchWeight}
+                onChangeText={setCatchWeight}
+                keyboardType="decimal-pad"
+                placeholder="重量(kg)"
+                placeholderTextColor={PIXEL_COLORS.hudInactive}
+              />
+            </View>
             <PixelButton
               title="添加"
+              icon="+"
               onPress={addCatch}
               size="small"
               style={{ marginLeft: 8 }}
@@ -170,20 +207,27 @@ export default function NewRecordScreen() {
 
       {/* Notes */}
       <PixelCard style={styles.section}>
-        <PixelText variant="subtitle" style={{ marginBottom: 8 }}>备注</PixelText>
-        <TextInput
-          style={[styles.input, styles.textArea]}
-          value={notes}
-          onChangeText={setNotes}
-          placeholder="记录一些心得体会..."
-          placeholderTextColor={PIXEL_COLORS.uiTextDim}
-          multiline
-          numberOfLines={4}
-        />
+        <View style={styles.sectionHeader}>
+          <PixelText variant="pixel" color={PIXEL_COLORS.hudActive} style={{ fontSize: 10 }}>
+            {'▣ '}
+          </PixelText>
+          <PixelText variant="subtitle">备注</PixelText>
+        </View>
+        <View style={styles.inputFrame}>
+          <TextInput
+            style={[styles.input, styles.textArea]}
+            value={notes}
+            onChangeText={setNotes}
+            placeholder="记录一些心得体会..."
+            placeholderTextColor={PIXEL_COLORS.hudInactive}
+            multiline
+            numberOfLines={4}
+          />
+        </View>
       </PixelCard>
 
       {/* Save */}
-      <PixelButton title="保存记录" onPress={handleSave} size="large" />
+      <PixelButton title="保存记录" icon="◈" onPress={handleSave} size="large" />
     </ScrollView>
   );
 }
@@ -192,29 +236,91 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: PIXEL_COLORS.uiBg },
   content: { padding: 16, paddingBottom: 32 },
   section: { marginBottom: 12 },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+    paddingBottom: 6,
+    borderBottomWidth: 2,
+    borderBottomColor: PIXEL_COLORS.windowOuter,
+  },
+  inputFrame: {
+    padding: 3,
+    backgroundColor: PIXEL_COLORS.windowOuter,
+  },
   input: {
-    borderWidth: 2, borderColor: PIXEL_COLORS.uiBorder,
-    backgroundColor: PIXEL_COLORS.uiBg, color: PIXEL_COLORS.uiText,
-    fontFamily: 'SpaceMono', fontSize: 13,
+    borderWidth: 2,
+    borderColor: PIXEL_COLORS.hudBorder,
+    backgroundColor: PIXEL_COLORS.hudBg,
+    color: PIXEL_COLORS.uiText,
+    fontFamily: 'SpaceMono',
+    fontSize: 13,
     padding: 10,
   },
   textArea: { height: 100, textAlignVertical: 'top' },
-  weatherRow: { flexDirection: 'row', gap: 12 },
+  weatherRow: { flexDirection: 'row', gap: 8 },
   weatherBtn: {
-    alignItems: 'center', padding: 8,
-    borderWidth: 2, borderColor: 'transparent', flex: 1,
+    alignItems: 'center',
+    padding: 10,
+    flex: 1,
+    borderWidth: 2,
+    borderColor: PIXEL_COLORS.hudBorder,
+    backgroundColor: PIXEL_COLORS.hudBg,
+    position: 'relative',
+    overflow: 'hidden',
   },
   weatherActive: {
-    borderColor: PIXEL_COLORS.uiHighlight,
-    backgroundColor: PIXEL_COLORS.uiHighlight + '20',
+    borderColor: PIXEL_COLORS.hudActive,
+    backgroundColor: PIXEL_COLORS.hudActive + '15',
+  },
+  weatherShine: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 2,
+    backgroundColor: PIXEL_COLORS.hudActive + '66',
   },
   catchItem: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: PIXEL_COLORS.uiBorder + '44',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 8,
+    marginBottom: 4,
+    backgroundColor: PIXEL_COLORS.hudBg,
+    borderWidth: 1,
+    borderColor: PIXEL_COLORS.hudBorder,
+  },
+  catchDeleteBtn: {
+    padding: 4,
+    backgroundColor: PIXEL_COLORS.uiDanger + '22',
+    borderWidth: 1,
+    borderColor: PIXEL_COLORS.uiDanger + '44',
   },
   addCatchRow: { marginTop: 8 },
-  fishPicker: { maxHeight: 36, marginBottom: 8 },
-  fishOption: { paddingHorizontal: 8, paddingVertical: 4, marginRight: 6, borderWidth: 1, borderColor: PIXEL_COLORS.uiBorder },
-  fishOptionActive: { borderColor: PIXEL_COLORS.uiHighlight, backgroundColor: PIXEL_COLORS.uiHighlight + '20' },
+  fishPicker: { maxHeight: 40, marginBottom: 10 },
+  fishOption: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    marginRight: 6,
+    borderWidth: 2,
+    borderColor: PIXEL_COLORS.hudBorder,
+    backgroundColor: PIXEL_COLORS.hudBg,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  fishOptionActive: {
+    borderColor: PIXEL_COLORS.hudActive,
+    backgroundColor: PIXEL_COLORS.hudActive + '15',
+  },
+  fishOptionShine: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 2,
+    backgroundColor: PIXEL_COLORS.hudActive + '66',
+  },
   addCatchInputRow: { flexDirection: 'row', alignItems: 'center' },
 });

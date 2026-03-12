@@ -15,6 +15,18 @@ export const unstable_settings = {
 
 SplashScreen.preventAutoHideAsync();
 
+const GameTheme = {
+  ...DarkTheme,
+  colors: {
+    ...DarkTheme.colors,
+    background: '#0D0A14',
+    card: '#1A1225',
+    text: '#F0E6D3',
+    border: '#6B5B7B',
+    primary: '#FFD700',
+  },
+};
+
 export default function RootLayout() {
   const [loaded, error] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
@@ -38,7 +50,7 @@ export default function RootLayout() {
   return (
     <>
       <StatusBar style="light" />
-      <ThemeProvider value={DarkTheme}>
+      <ThemeProvider value={GameTheme}>
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="(tabs)" />
         </Stack>

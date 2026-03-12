@@ -5,6 +5,7 @@ import { PIXEL_COLORS } from '../../../src/theme/colors';
 import { PixelText } from '../../../src/components/common/PixelText';
 import { PixelCard } from '../../../src/components/common/PixelCard';
 import { PixelButton } from '../../../src/components/common/PixelButton';
+import { PixelSprite } from '../../../src/components/common/PixelSprite';
 import { FISH_SPECIES } from '../../../src/data/fish-species';
 import { useFishDexStore } from '../../../src/stores/useFishDexStore';
 import { FishCategory } from '../../../src/game/types';
@@ -12,32 +13,18 @@ import { FishCategory } from '../../../src/game/types';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_WIDTH = (SCREEN_WIDTH - 48) / 2;
 
-function PixelSprite({ data, colors, pixelSize = 4 }: { data: number[][]; colors: string[]; pixelSize?: number }) {
-  return (
-    <View>
-      {data.map((row, r) => (
-        <View key={r} style={{ flexDirection: 'row' }}>
-          {row.map((colorIdx, c) => (
-            <View
-              key={c}
-              style={{
-                width: pixelSize,
-                height: pixelSize,
-                backgroundColor: colorIdx > 0 ? colors[colorIdx] : 'transparent',
-              }}
-            />
-          ))}
-        </View>
-      ))}
-    </View>
-  );
-}
-
 const CATEGORIES: { key: FishCategory | 'all'; label: string }[] = [
   { key: 'all', label: '全部' },
   { key: 'freshwater', label: '淡水' },
   { key: 'pond', label: '池塘' },
 ];
+
+const RARITY_BORDER: Record<string, string> = {
+  common: PIXEL_COLORS.rarityCommon,
+  uncommon: PIXEL_COLORS.rarityUncommon,
+  rare: PIXEL_COLORS.rarityRare,
+  legendary: PIXEL_COLORS.rarityLegendary,
+};
 
 export default function EncyclopediaScreen() {
   const [category, setCategory] = useState<FishCategory | 'all'>('all');
@@ -47,39 +34,52 @@ export default function EncyclopediaScreen() {
     (f) => category === 'all' || f.category === category
   );
 
+  const progressPercent = (getTotalDiscovered() / FISH_SPECIES.length) * 100;
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {/* Stats */}
+      {/* Stats - EXP bar style */}
       <PixelCard style={styles.statsCard}>
-        <PixelText variant="pixel" color={PIXEL_COLORS.uiHighlight}>
+        <PixelText variant="pixel" color={PIXEL_COLORS.hudActive}>
           图鉴进度: {getTotalDiscovered()} / {FISH_SPECIES.length}
         </PixelText>
-        <View style={styles.progressBar}>
-          <View
-            style={[
-              styles.progressFill,
-              { width: `${(getTotalDiscovered() / FISH_SPECIES.length) * 100}%` },
-            ]}
-          />
+        <View style={styles.progressOuter}>
+          <View style={styles.progressInner}>
+            <View
+              style={[
+                styles.progressFill,
+                { width: `${progressPercent}%` },
+              ]}
+            />
+            {/* Shine effect on the bar */}
+            <View style={styles.progressShine} />
+          </View>
         </View>
+        <PixelText variant="caption" color={PIXEL_COLORS.uiTextDim} style={{ marginTop: 4, fontSize: 9 }}>
+          EXP {Math.round(progressPercent)}%
+        </PixelText>
       </PixelCard>
 
-      {/* Category filter */}
+      {/* Category filter - game menu tabs */}
       <View style={styles.categoryRow}>
-        {CATEGORIES.map((cat) => (
-          <TouchableOpacity
-            key={cat.key}
-            onPress={() => setCategory(cat.key)}
-            style={[styles.categoryBtn, category === cat.key && styles.categoryActive]}
-          >
-            <PixelText
-              variant="caption"
-              color={category === cat.key ? PIXEL_COLORS.uiHighlight : PIXEL_COLORS.uiTextDim}
+        {CATEGORIES.map((cat) => {
+          const active = category === cat.key;
+          return (
+            <TouchableOpacity
+              key={cat.key}
+              onPress={() => setCategory(cat.key)}
+              style={[styles.categoryBtn, active && styles.categoryActive]}
             >
-              {cat.label}
-            </PixelText>
-          </TouchableOpacity>
-        ))}
+              <PixelText
+                variant="caption"
+                color={active ? PIXEL_COLORS.hudActive : PIXEL_COLORS.hudInactive}
+                style={active ? styles.categoryTextActive : undefined}
+              >
+                [{cat.label}]
+              </PixelText>
+            </TouchableOpacity>
+          );
+        })}
       </View>
 
       {/* Fish grid */}
@@ -87,36 +87,56 @@ export default function EncyclopediaScreen() {
         {filteredFish.map((fish) => {
           const discovered = isDiscovered(fish.id);
           const entry = getEntry(fish.id);
+          const rarityBorder = RARITY_BORDER[fish.rarity] || PIXEL_COLORS.rarityCommon;
           return (
             <TouchableOpacity
               key={fish.id}
               onPress={() => router.push(`/encyclopedia/${fish.id}` as any)}
               style={styles.fishCard}
             >
-              <PixelCard style={styles.fishCardInner}>
-                <View style={[styles.fishPreview, !discovered && styles.fishHidden]}>
-                  <PixelSprite
-                    data={fish.pixelArt}
-                    colors={discovered ? fish.pixelColors : fish.pixelColors.map(() => '#444444')}
-                    pixelSize={4}
-                  />
-                </View>
-                <PixelText variant="caption" numberOfLines={1} style={{ marginTop: 6 }}>
-                  {discovered ? fish.nameCn : '???'}
-                </PixelText>
-                {discovered && (
-                  <PixelText variant="caption" color={PIXEL_COLORS.uiTextDim} style={{ fontSize: 9 }}>
-                    x{entry?.caughtCount ?? 0}
-                  </PixelText>
-                )}
-                <View style={styles.difficultyRow}>
-                  {Array.from({ length: fish.difficulty }, (_, i) => (
-                    <PixelText key={i} variant="caption" color={PIXEL_COLORS.uiHighlight} style={{ fontSize: 8 }}>
-                      ★
+              <View
+                style={[
+                  styles.fishCardOuter,
+                  discovered && { borderColor: rarityBorder },
+                ]}
+              >
+                <View style={[
+                  styles.fishCardBorder,
+                  discovered && { borderColor: rarityBorder + '55' },
+                ]}>
+                  <View style={styles.fishCardFill}>
+                    <View style={[styles.fishPreview, !discovered && styles.fishHidden]}>
+                      <PixelSprite
+                        data={fish.pixelArt}
+                        colors={discovered ? fish.pixelColors : fish.pixelColors.map(() => '#444444')}
+                        pixelSize={4}
+                      />
+                    </View>
+                    <PixelText variant="caption" numberOfLines={1} style={{ marginTop: 6, textAlign: 'center' }}>
+                      {discovered ? fish.nameCn : '[???]'}
                     </PixelText>
-                  ))}
+                    {discovered && (
+                      <PixelText variant="caption" color={PIXEL_COLORS.uiTextDim} style={{ fontSize: 9, textAlign: 'center' }}>
+                        [已发现] x{entry?.caughtCount ?? 0}
+                      </PixelText>
+                    )}
+                    {!discovered && (
+                      <PixelText variant="caption" color={PIXEL_COLORS.hudInactive} style={{ fontSize: 9, textAlign: 'center' }}>
+                        [未发现]
+                      </PixelText>
+                    )}
+                    {/* Rarity indicator */}
+                    <View style={styles.difficultyRow}>
+                      <View style={[styles.rarityDot, { backgroundColor: rarityBorder }]} />
+                      {Array.from({ length: fish.difficulty }, (_, i) => (
+                        <PixelText key={i} variant="caption" color={PIXEL_COLORS.hudActive} style={{ fontSize: 8 }}>
+                          ★
+                        </PixelText>
+                      ))}
+                    </View>
+                  </View>
                 </View>
-              </PixelCard>
+              </View>
             </TouchableOpacity>
           );
         })}
@@ -126,6 +146,7 @@ export default function EncyclopediaScreen() {
       <View style={styles.linksRow}>
         <PixelButton
           title="钓具大全"
+          icon="⚔"
           onPress={() => router.push('/encyclopedia/gear' as any)}
           variant="secondary"
           size="small"
@@ -133,6 +154,7 @@ export default function EncyclopediaScreen() {
         />
         <PixelButton
           title="钓法教程"
+          icon="📜"
           onPress={() => router.push('/encyclopedia/techniques' as any)}
           variant="secondary"
           size="small"
@@ -144,25 +166,78 @@ export default function EncyclopediaScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: PIXEL_COLORS.uiBg },
+  container: { flex: 1, backgroundColor: PIXEL_COLORS.hudBg },
   content: { padding: 16, paddingBottom: 32 },
   statsCard: { marginBottom: 12, alignItems: 'center' },
-  progressBar: {
-    width: '100%', height: 10, backgroundColor: PIXEL_COLORS.uiBg,
-    borderWidth: 2, borderColor: PIXEL_COLORS.uiBorder, marginTop: 8, overflow: 'hidden',
+  progressOuter: {
+    width: '100%',
+    height: 16,
+    backgroundColor: PIXEL_COLORS.windowOuter,
+    borderWidth: 3,
+    borderColor: PIXEL_COLORS.windowOuter,
+    marginTop: 8,
+    overflow: 'hidden',
   },
-  progressFill: { height: '100%', backgroundColor: PIXEL_COLORS.uiHighlight },
-  categoryRow: { flexDirection: 'row', marginBottom: 12, gap: 8 },
+  progressInner: {
+    flex: 1,
+    backgroundColor: PIXEL_COLORS.hudBg,
+    borderWidth: 1,
+    borderColor: PIXEL_COLORS.hudBorder,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: PIXEL_COLORS.hudActive,
+  },
+  progressShine: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 2,
+    backgroundColor: PIXEL_COLORS.starColor + '33',
+  },
+  categoryRow: { flexDirection: 'row', marginBottom: 12, gap: 4 },
   categoryBtn: {
-    paddingHorizontal: 12, paddingVertical: 6,
-    borderWidth: 2, borderColor: PIXEL_COLORS.uiBorder,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderWidth: 2,
+    borderColor: PIXEL_COLORS.windowOuter,
+    backgroundColor: PIXEL_COLORS.hudBg,
   },
-  categoryActive: { borderColor: PIXEL_COLORS.uiHighlight, backgroundColor: PIXEL_COLORS.uiHighlight + '20' },
+  categoryActive: {
+    borderColor: PIXEL_COLORS.hudActive,
+    backgroundColor: PIXEL_COLORS.hudGlow,
+    borderBottomWidth: 3,
+  },
+  categoryTextActive: {
+    fontSize: 12,
+  },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   fishCard: { width: CARD_WIDTH },
-  fishCardInner: { alignItems: 'center', padding: 8 },
+  fishCardOuter: {
+    borderWidth: 3,
+    borderColor: PIXEL_COLORS.windowOuter,
+  },
+  fishCardBorder: {
+    borderWidth: 2,
+    borderColor: PIXEL_COLORS.windowInner + '55',
+  },
+  fishCardFill: {
+    alignItems: 'center',
+    padding: 8,
+    backgroundColor: PIXEL_COLORS.windowFill,
+    position: 'relative',
+    overflow: 'hidden',
+  },
   fishPreview: { height: 50, justifyContent: 'center', alignItems: 'center' },
   fishHidden: { opacity: 0.4 },
-  difficultyRow: { flexDirection: 'row', marginTop: 2 },
+  difficultyRow: { flexDirection: 'row', marginTop: 4, alignItems: 'center', gap: 2 },
+  rarityDot: {
+    width: 6,
+    height: 6,
+    marginRight: 2,
+  },
   linksRow: { flexDirection: 'row', marginTop: 20 },
 });
