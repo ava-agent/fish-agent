@@ -7,41 +7,48 @@ import { PixelCard } from '../../../src/components/common/PixelCard';
 import { PixelButton } from '../../../src/components/common/PixelButton';
 import { PixelSprite } from '../../../src/components/common/PixelSprite';
 import { FISH_SPECIES } from '../../../src/data/fish-species';
+import { AI_CREATURES } from '../../../src/data/aiCreatures';
 import { useFishDexStore } from '../../../src/stores/useFishDexStore';
-import { FishCategory } from '../../../src/game/types';
+import { EntityType } from '../../../src/game/types';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_WIDTH = (SCREEN_WIDTH - 48) / 2;
 
-const CATEGORIES: { key: FishCategory | 'all'; label: string }[] = [
+const ALL_SPECIES = [...FISH_SPECIES, ...AI_CREATURES];
+
+type EntityFilter = 'all' | 'fish' | 'ai_creature';
+
+const ENTITY_FILTERS: { key: EntityFilter; label: string }[] = [
   { key: 'all', label: '全部' },
-  { key: 'freshwater', label: '淡水' },
-  { key: 'pond', label: '池塘' },
+  { key: 'fish', label: '鱼类' },
+  { key: 'ai_creature', label: 'AI生物' },
 ];
 
 const RARITY_BORDER: Record<string, string> = {
   common: PIXEL_COLORS.rarityCommon,
   uncommon: PIXEL_COLORS.rarityUncommon,
   rare: PIXEL_COLORS.rarityRare,
+  epic: PIXEL_COLORS.rarityEpic,
   legendary: PIXEL_COLORS.rarityLegendary,
 };
 
 export default function EncyclopediaScreen() {
-  const [category, setCategory] = useState<FishCategory | 'all'>('all');
+  const [entityFilter, setEntityFilter] = useState<EntityFilter>('all');
   const { isDiscovered, getEntry, getTotalDiscovered } = useFishDexStore();
 
-  const filteredFish = FISH_SPECIES.filter(
-    (f) => category === 'all' || f.category === category
-  );
+  const filteredSpecies = ALL_SPECIES.filter((f) => {
+    if (entityFilter === 'all') return true;
+    return (f.entityType ?? 'fish') === entityFilter;
+  });
 
-  const progressPercent = (getTotalDiscovered() / FISH_SPECIES.length) * 100;
+  const progressPercent = (getTotalDiscovered() / ALL_SPECIES.length) * 100;
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* Stats - EXP bar style */}
       <PixelCard style={styles.statsCard}>
         <PixelText variant="pixel" color={PIXEL_COLORS.hudActive}>
-          图鉴进度: {getTotalDiscovered()} / {FISH_SPECIES.length}
+          图鉴进度: {getTotalDiscovered()} / {ALL_SPECIES.length}
         </PixelText>
         <View style={styles.progressOuter}>
           <View style={styles.progressInner}>
@@ -60,14 +67,14 @@ export default function EncyclopediaScreen() {
         </PixelText>
       </PixelCard>
 
-      {/* Category filter - game menu tabs */}
+      {/* Entity type filter */}
       <View style={styles.categoryRow}>
-        {CATEGORIES.map((cat) => {
-          const active = category === cat.key;
+        {ENTITY_FILTERS.map((filter) => {
+          const active = entityFilter === filter.key;
           return (
             <TouchableOpacity
-              key={cat.key}
-              onPress={() => setCategory(cat.key)}
+              key={filter.key}
+              onPress={() => setEntityFilter(filter.key)}
               style={[styles.categoryBtn, active && styles.categoryActive]}
             >
               <PixelText
@@ -75,19 +82,20 @@ export default function EncyclopediaScreen() {
                 color={active ? PIXEL_COLORS.hudActive : PIXEL_COLORS.hudInactive}
                 style={active ? styles.categoryTextActive : undefined}
               >
-                [{cat.label}]
+                [{filter.label}]
               </PixelText>
             </TouchableOpacity>
           );
         })}
       </View>
 
-      {/* Fish grid */}
+      {/* Species grid */}
       <View style={styles.grid}>
-        {filteredFish.map((fish) => {
+        {filteredSpecies.map((fish) => {
           const discovered = isDiscovered(fish.id);
           const entry = getEntry(fish.id);
           const rarityBorder = RARITY_BORDER[fish.rarity] || PIXEL_COLORS.rarityCommon;
+          const isAI = fish.entityType === 'ai_creature';
           return (
             <TouchableOpacity
               key={fish.id}
@@ -98,6 +106,7 @@ export default function EncyclopediaScreen() {
                 style={[
                   styles.fishCardOuter,
                   discovered && { borderColor: rarityBorder },
+                  isAI && styles.aiCardOuter,
                 ]}
               >
                 <View style={[
@@ -105,6 +114,13 @@ export default function EncyclopediaScreen() {
                   discovered && { borderColor: rarityBorder + '55' },
                 ]}>
                   <View style={styles.fishCardFill}>
+                    {isAI && (
+                      <View style={styles.aiBadge}>
+                        <PixelText variant="caption" color={PIXEL_COLORS.aiCyan} style={{ fontSize: 8 }}>
+                          AI
+                        </PixelText>
+                      </View>
+                    )}
                     <View style={[styles.fishPreview, !discovered && styles.fishHidden]}>
                       <PixelSprite
                         data={fish.pixelArt}
@@ -116,7 +132,7 @@ export default function EncyclopediaScreen() {
                       {discovered ? fish.nameCn : '[???]'}
                     </PixelText>
                     {discovered && (
-                      <PixelText variant="caption" color={PIXEL_COLORS.uiTextDim} style={{ fontSize: 9, textAlign: 'center' }}>
+                      <PixelText variant="caption" color={isAI ? PIXEL_COLORS.aiPurple : PIXEL_COLORS.uiTextDim} style={{ fontSize: 9, textAlign: 'center' }}>
                         [已发现] x{entry?.caughtCount ?? 0}
                       </PixelText>
                     )}
@@ -240,4 +256,18 @@ const styles = StyleSheet.create({
     marginRight: 2,
   },
   linksRow: { flexDirection: 'row', marginTop: 20 },
+  aiCardOuter: {
+    borderColor: PIXEL_COLORS.aiPurpleDim,
+  },
+  aiBadge: {
+    position: 'absolute',
+    top: 2,
+    right: 2,
+    backgroundColor: PIXEL_COLORS.aiPurple + '44',
+    borderWidth: 1,
+    borderColor: PIXEL_COLORS.aiCyan,
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    zIndex: 1,
+  },
 });

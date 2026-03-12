@@ -29,18 +29,6 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="encyclopedia"
-        options={{
-          title: '百科',
-          tabBarIcon: ({ color, focused }) => (
-            <View style={focused ? styles.activeIcon : undefined}>
-              <MaterialCommunityIcons name="book-open-variant" size={24} color={color} />
-              {focused && <View style={styles.iconGlow} />}
-            </View>
-          ),
-        }}
-      />
-      <Tabs.Screen
         name="agent"
         options={{
           title: 'AI助手',
@@ -53,12 +41,12 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="community"
+        name="encyclopedia"
         options={{
-          title: '社区',
+          title: '图鉴',
           tabBarIcon: ({ color, focused }) => (
             <View style={focused ? styles.activeIcon : undefined}>
-              <MaterialCommunityIcons name="account-group" size={24} color={color} />
+              <MaterialCommunityIcons name="book-open-variant" size={24} color={color} />
               {focused && <View style={styles.iconGlow} />}
             </View>
           ),
@@ -86,6 +74,12 @@ export default function TabLayout() {
               {focused && <View style={styles.iconGlow} />}
             </View>
           ),
+        }}
+      />
+      <Tabs.Screen
+        name="community"
+        options={{
+          href: null,
         }}
       />
     </Tabs>
