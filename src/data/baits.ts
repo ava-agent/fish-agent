@@ -139,4 +139,43 @@ export const BAITS: BaitType[] = [
     ],
     pixelColors: ['transparent', '#E8913A', '#333333'],
   },
+  {
+    id: 'data_fragment',
+    name: 'Data Fragment',
+    nameCn: '数据碎片',
+    description: 'AI 世界的通用诱饵。对 AI 生物有极强吸引力，对真鱼几乎无效。',
+    effectiveness: {
+      crucian_carp: 0.1, grass_carp: 0.1, common_carp: 0.1,
+      prompt_sprite: 0.9, token_swarm: 0.85,
+      hallucination_jelly: 0.7, overfitting_octopus: 0.7, gan_twins: 0.75,
+      transformer_whale: 0.5, loss_deep_fish: 0.5, agi_koi: 0.3,
+    },
+    pixelArt: [
+      [0, 1, 0, 1],
+      [1, 2, 1, 0],
+      [0, 1, 2, 1],
+      [1, 0, 1, 0],
+    ],
+    pixelColors: ['transparent', '#44CCFF', '#AA66FF'],
+  },
+  {
+    id: 'compute_chip',
+    name: 'Compute Chip',
+    nameCn: '算力芯片',
+    description: '高级 AI 诱饵。对史诗和传说级 AI 生物有极高吸引力。',
+    effectiveness: {
+      crucian_carp: 0.05,
+      prompt_sprite: 0.3, token_swarm: 0.3,
+      hallucination_jelly: 0.5, overfitting_octopus: 0.5, gan_twins: 0.5,
+      transformer_whale: 0.9, loss_deep_fish: 0.85, agi_koi: 0.95,
+    },
+    pixelArt: [
+      [0, 1, 1, 1, 0],
+      [1, 2, 3, 2, 1],
+      [1, 3, 2, 3, 1],
+      [1, 2, 3, 2, 1],
+      [0, 1, 1, 1, 0],
+    ],
+    pixelColors: ['transparent', '#333333', '#44CCFF', '#FFD700'],
+  },
 ];

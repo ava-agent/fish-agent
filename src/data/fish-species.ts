@@ -3,6 +3,7 @@ import { FishSpecies } from '../game/types';
 export const FISH_SPECIES: FishSpecies[] = [
   {
     id: 'crucian_carp',
+    entityType: 'fish' as const,
     name: 'Crucian Carp',
     nameCn: '鲫鱼',
     category: 'freshwater',
@@ -30,6 +31,7 @@ export const FISH_SPECIES: FishSpecies[] = [
   },
   {
     id: 'grass_carp',
+    entityType: 'fish' as const,
     name: 'Grass Carp',
     nameCn: '草鱼',
     category: 'freshwater',
@@ -59,6 +61,7 @@ export const FISH_SPECIES: FishSpecies[] = [
   },
   {
     id: 'black_carp',
+    entityType: 'fish' as const,
     name: 'Black Carp',
     nameCn: '青鱼',
     category: 'freshwater',
@@ -90,6 +93,7 @@ export const FISH_SPECIES: FishSpecies[] = [
   },
   {
     id: 'common_carp',
+    entityType: 'fish' as const,
     name: 'Common Carp',
     nameCn: '鲤鱼',
     category: 'freshwater',
@@ -117,6 +121,7 @@ export const FISH_SPECIES: FishSpecies[] = [
   },
   {
     id: 'catfish',
+    entityType: 'fish' as const,
     name: 'Catfish',
     nameCn: '鲶鱼',
     category: 'freshwater',
@@ -144,6 +149,7 @@ export const FISH_SPECIES: FishSpecies[] = [
   },
   {
     id: 'silver_carp',
+    entityType: 'fish' as const,
     name: 'Silver Carp',
     nameCn: '鲢鱼',
     category: 'freshwater',
@@ -171,6 +177,7 @@ export const FISH_SPECIES: FishSpecies[] = [
   },
   {
     id: 'mandarin_fish',
+    entityType: 'fish' as const,
     name: 'Mandarin Fish',
     nameCn: '鳜鱼（桂花鱼）',
     category: 'freshwater',
@@ -199,6 +206,7 @@ export const FISH_SPECIES: FishSpecies[] = [
   },
   {
     id: 'snakehead',
+    entityType: 'fish' as const,
     name: 'Snakehead',
     nameCn: '黑鱼（乌鳢）',
     category: 'freshwater',
@@ -227,6 +235,7 @@ export const FISH_SPECIES: FishSpecies[] = [
   },
   {
     id: 'tilapia',
+    entityType: 'fish' as const,
     name: 'Tilapia',
     nameCn: '罗非鱼',
     category: 'pond',
@@ -254,6 +263,7 @@ export const FISH_SPECIES: FishSpecies[] = [
   },
   {
     id: 'largemouth_bass',
+    entityType: 'fish' as const,
     name: 'Largemouth Bass',
     nameCn: '大口黑鲈',
     category: 'freshwater',
@@ -282,6 +292,7 @@ export const FISH_SPECIES: FishSpecies[] = [
   },
   {
     id: 'yellow_catfish',
+    entityType: 'fish' as const,
     name: 'Yellow Catfish',
     nameCn: '黄颡鱼（黄辣丁）',
     category: 'freshwater',
@@ -308,6 +319,7 @@ export const FISH_SPECIES: FishSpecies[] = [
   },
   {
     id: 'golden_carp',
+    entityType: 'fish' as const,
     name: 'Golden Koi',
     nameCn: '锦鲤',
     category: 'pond',

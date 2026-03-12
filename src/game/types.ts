@@ -1,7 +1,8 @@
 export type GamePhase = 'idle' | 'casting' | 'waiting' | 'bite' | 'fighting' | 'caught' | 'escaped' | 'no_bite';
 
-export type FishRarity = 'common' | 'uncommon' | 'rare' | 'legendary';
+export type FishRarity = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
 export type FishCategory = 'freshwater' | 'saltwater' | 'pond';
+export type EntityType = 'fish' | 'ai_creature';
 export type Weather = 'sunny' | 'cloudy' | 'rainy' | 'windy';
 export type Difficulty = 1 | 2 | 3 | 4 | 5;
 
@@ -23,6 +24,9 @@ export interface FishSpecies {
   pixelColors: string[];
   rarity: FishRarity;
   tip: string; // real-world fishing tip
+  entityType?: EntityType;
+  quoteOnCatch?: string;
+  drops?: ResourceDrop[];
 }
 
 export interface BaitType {
@@ -117,4 +121,43 @@ export interface FishingSpot {
   difficulty: Difficulty;
   description: string;
   tips: string[];
+}
+
+export type ResourceType = 'prompt_fragment' | 'model_params' | 'training_data' | 'compute_crystal';
+
+export interface ResourceDrop {
+  type: ResourceType;
+  amount: number;
+}
+
+export type AgentAttribute = 'perception' | 'reasoning' | 'generation' | 'compute';
+
+export type EquipmentSlot = 'rod' | 'line' | 'hook';
+
+export interface Achievement {
+  id: string;
+  name: string;
+  nameCn: string;
+  description: string;
+  condition: AchievementCondition;
+  reward: AchievementReward;
+}
+
+export interface AchievementCondition {
+  type: 'catch_count' | 'catch_species' | 'catch_specific' | 'combo' | 'collection';
+  target: number;
+  filter?: {
+    entityType?: EntityType;
+    speciesId?: string;
+    rarity?: FishRarity;
+  };
+}
+
+export interface AchievementReward {
+  type: 'unlock_bait' | 'resources' | 'agent_levels' | 'title' | 'equipment_fragment';
+  baitId?: string;
+  resources?: ResourceDrop[];
+  levels?: number;
+  title?: string;
+  fragmentId?: string;
 }
