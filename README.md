@@ -8,7 +8,7 @@
 [![Zustand](https://img.shields.io/badge/Zustand-5.0-orange)](https://github.com/pmndrs/zustand)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-一款面向钓鱼爱好者的像素风移动端趣味应用，集**钓鱼模拟**、**百科图鉴**、**社区推荐**、**钓鱼日记**于一体。全部视觉元素通过代码绘制，无需外部图片资源。
+一款像素风钓鱼模拟游戏，融合 **AI 入侵** 主题 — 在钓鱼的同时捕获 AI 生物、收集资源、训练你的 AI 助手。集**钓鱼模拟**、**AI 助手养成**、**图鉴收集**、**成就系统**、**钓鱼日记**于一体。全部视觉元素通过代码绘制，无需外部图片资源。
 
 **在线体验**: [https://fish.rxcloud.group](https://fish.rxcloud.group)
 
@@ -28,13 +28,17 @@ npx expo start --web
 
 ## 应用截图
 
-| 钓鱼模拟 | 钓鱼百科 |
+| 钓鱼模拟 | AI 助手 |
 |:---:|:---:|
-| ![钓鱼模拟](screenshots/fishing.png) | ![钓鱼百科](screenshots/encyclopedia.png) |
+| ![钓鱼模拟](screenshots/fishing.png) | ![AI助手](screenshots/agent.png) |
 
-| 钓鱼社区 | 钓鱼记录 |
+| 图鉴系统 | 成就系统 |
 |:---:|:---:|
-| ![钓鱼社区](screenshots/community.png) | ![钓鱼记录](screenshots/records.png) |
+| ![图鉴系统](screenshots/encyclopedia.png) | ![成就系统](screenshots/achievements.png) |
+
+| 钓鱼记录 |
+|:---:|
+| ![钓鱼记录](screenshots/records.png) |
 
 ## 功能模块
 
@@ -298,6 +302,20 @@ React Native Web 不支持 `useNativeDriver`，代码中已使用 `Platform.OS !
 游戏中的收线手势需要触摸或鼠标拖动操作。移动端触摸体验最佳。
 
 ## 更新日志
+
+### v2.0.0 — AI 入侵
+- 新增：8 种 AI 生物（Prompt精灵、Token群、Hallucination水母等）
+- 新增：AI 助手养成系统（4 属性：感知/推理/生成/算力）
+- 新增：装备系统（神经网络鱼线、注意力鱼竿、梯度下降鱼钩）
+- 新增：成就系统（7 个成就，自动追踪与奖励）
+- 新增：2 种 AI 鱼饵（数据碎片、算力芯片）
+- 新增：资源收集与 AI 助手升级循环
+- 新增：图鉴支持全部/鱼类/AI生物 筛选
+- 新增：电脑端空格键操作支持
+- 新增："AI 入侵中" 脉冲提示横幅
+- 新增：水中 AI 生物紫色光晕效果
+- 改造：5 Tab 布局（钓鱼/AI助手/图鉴/成就/记录）
+- 优化：数据粒子效果更明显
 
 ### v1.1.0
 - 新增：首次打开显示游戏教程
