@@ -18,8 +18,11 @@ import { PixelSprite } from '../../src/components/common/PixelSprite';
 import { useGameStore } from '../../src/stores/useGameStore';
 import { useFishDexStore } from '../../src/stores/useFishDexStore';
 import { FISH_SPECIES } from '../../src/data/fish-species';
+import { AI_CREATURES } from '../../src/data/aiCreatures';
 import { BAITS } from '../../src/data/baits';
 import { FishSpecies } from '../../src/game/types';
+
+const ALL_SPECIES = [...FISH_SPECIES, ...AI_CREATURES];
 
 const TUTORIAL_SHOWN_KEY = '@fishing_tutorial_shown';
 
@@ -244,10 +247,11 @@ function CatchResultOverlay({
     common: PIXEL_COLORS.rarityCommon,
     uncommon: PIXEL_COLORS.rarityUncommon,
     rare: PIXEL_COLORS.rarityRare,
+    epic: PIXEL_COLORS.rarityEpic,
     legendary: PIXEL_COLORS.rarityLegendary,
   };
   const rarityLabel: Record<string, string> = {
-    common: '普通', uncommon: '少见', rare: '珍稀', legendary: '传说',
+    common: '普通', uncommon: '少见', rare: '珍稀', epic: '史诗', legendary: '传说',
   };
 
   return (
@@ -363,6 +367,134 @@ function TutorialOverlay({ onClose }: { onClose: () => void }) {
   );
 }
 
+const PARTICLE_DATA = ['01', 'AI', '∇', 'λ', '10', '{}', '>>'].map((text, i) => ({
+  text,
+  x: Math.random() * SCREEN_WIDTH,
+  delay: i * 600,
+  bottom: 20 + i * 15,
+}));
+
+function DataParticle({ text, x, delay, bottom }: { text: string; x: number; delay: number; bottom: number }) {
+  const anim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.delay(delay),
+        Animated.timing(anim, { toValue: 1, duration: 4000, useNativeDriver: Platform.OS !== 'web' }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, []);
+
+  const translateY = anim.interpolate({ inputRange: [0, 1], outputRange: [30, -40] });
+  const opacity = anim.interpolate({ inputRange: [0, 0.2, 0.8, 1], outputRange: [0, 0.5, 0.3, 0] });
+
+  return (
+    <Animated.View
+      style={{
+        position: 'absolute',
+        left: x,
+        bottom,
+        transform: [{ translateY }],
+        opacity,
+      }}
+    >
+      <PixelText variant="pixel" color={PIXEL_COLORS.aiPurple} style={{ fontSize: 8 }}>
+        {text}
+      </PixelText>
+    </Animated.View>
+  );
+}
+
+function DataParticles() {
+  return (
+    <>
+      {PARTICLE_DATA.map((p, i) => (
+        <DataParticle key={i} {...p} />
+      ))}
+    </>
+  );
+}
+
+function AICatchResultOverlay({
+  fish, weight, isNewDiscovery, onContinue,
+}: {
+  fish: FishSpecies; weight: number; isNewDiscovery: boolean; onContinue: () => void;
+}) {
+  const rarityLabels: Record<string, string> = {
+    common: '普通', rare: '稀有', epic: '史诗', legendary: '传说',
+  };
+
+  return (
+    <View style={styles.overlay}>
+      <PixelCard style={{ ...styles.catchCard, borderColor: PIXEL_COLORS.aiPurple }}>
+        <View style={styles.newBadge}>
+          <PixelText variant="pixel" color={PIXEL_COLORS.aiPurple}>
+            {'★★★ AI 实体捕获！★★★'}
+          </PixelText>
+        </View>
+
+        <View style={styles.catchFishDisplay}>
+          <PixelSprite data={fish.pixelArt} colors={fish.pixelColors} pixelSize={8} />
+        </View>
+
+        <PixelText variant="subtitle" style={{ textAlign: 'center', marginTop: 12 }}>
+          {fish.nameCn}
+        </PixelText>
+        <PixelText variant="caption" color={PIXEL_COLORS.aiPurple} style={{ textAlign: 'center', marginTop: 2 }}>
+          [{rarityLabels[fish.rarity] || fish.rarity}]
+        </PixelText>
+
+        <View style={styles.catchStats}>
+          <View style={styles.catchStat}>
+            <PixelText variant="pixel" color={PIXEL_COLORS.uiTextDim}>重量</PixelText>
+            <PixelText variant="subtitle" color={PIXEL_COLORS.aiPurple}>{weight.toFixed(1)} kg</PixelText>
+          </View>
+          <View style={styles.catchStatDivider} />
+          <View style={styles.catchStat}>
+            <PixelText variant="pixel" color={PIXEL_COLORS.uiTextDim}>难度</PixelText>
+            <PixelText variant="subtitle" color={PIXEL_COLORS.aiPurple}>{'★'.repeat(fish.difficulty)}</PixelText>
+          </View>
+        </View>
+
+        {fish.quoteOnCatch && (
+          <View style={[styles.tipBox, { borderColor: PIXEL_COLORS.aiPurpleDim }]}>
+            <PixelText variant="caption" color={PIXEL_COLORS.uiText} style={{ fontStyle: 'italic' }}>
+              "{fish.quoteOnCatch}"
+            </PixelText>
+          </View>
+        )}
+
+        {fish.drops && fish.drops.length > 0 && (
+          <View style={styles.dropsRow}>
+            {fish.drops.map((drop, i) => {
+              const dropConfig: Record<string, { color: string; label: string }> = {
+                prompt_fragment: { color: PIXEL_COLORS.resourcePrompt, label: 'Prompt碎片' },
+                model_params: { color: PIXEL_COLORS.resourceParams, label: '模型参数' },
+                training_data: { color: PIXEL_COLORS.resourceData, label: '训练数据' },
+                compute_crystal: { color: PIXEL_COLORS.resourceCompute, label: '算力晶体' },
+              };
+              const cfg = dropConfig[drop.type] || { color: '#888', label: drop.type };
+              return (
+                <View key={i} style={[styles.dropChip, { borderColor: cfg.color + '66' }]}>
+                  <PixelText variant="pixel" color={cfg.color}>+{drop.amount}</PixelText>
+                  <PixelText variant="caption" color={PIXEL_COLORS.uiTextDim} style={{ marginLeft: 4 }}>
+                    {cfg.label}
+                  </PixelText>
+                </View>
+              );
+            })}
+          </View>
+        )}
+
+        <PixelButton title="继续钓鱼" onPress={onContinue} style={{ marginTop: 12 }} icon="▸" />
+      </PixelCard>
+    </View>
+  );
+}
+
 export default function FishingScreen() {
   const {
     phase, selectedBait, currentFish, lineTension, fishStamina,
@@ -402,7 +534,7 @@ export default function FishingScreen() {
   const castPowerRef = useRef(0);
 
   useEffect(() => {
-    const fish = FISH_SPECIES.map((f) => ({
+    const fish = ALL_SPECIES.map((f) => ({
       fish: f,
       x: Math.random() * (SCREEN_WIDTH - 60),
       y: GAME_HEIGHT * 0.55 + Math.random() * (GAME_HEIGHT * 0.35),
@@ -455,8 +587,16 @@ export default function FishingScreen() {
     const baseWait = 3000 + Math.random() * 5000;
 
     biteTimeout.current = setTimeout(() => {
-      const candidates = FISH_SPECIES.filter((fish) => {
+      const AI_BASE_RATES: Record<string, number> = {
+        common: 0.15, uncommon: 0.10, rare: 0.08, epic: 0.03, legendary: 0.005,
+      };
+
+      const candidates = ALL_SPECIES.filter((fish) => {
         const effectiveness = baitObj?.effectiveness[fish.id] ?? 0.1;
+        if (fish.entityType === 'ai_creature') {
+          const baseRate = AI_BASE_RATES[fish.rarity] ?? 0.1;
+          return Math.random() < baseRate && Math.random() < effectiveness;
+        }
         return Math.random() < effectiveness;
       });
 
@@ -612,6 +752,7 @@ export default function FishingScreen() {
         {/* Water */}
         <View style={styles.water}>
           <WaterWaves />
+          <DataParticles />
           {swimmingFish.map((sf, i) => (
             <View
               key={i}
@@ -716,7 +857,9 @@ export default function FishingScreen() {
         )}
 
         {phase === 'caught' && currentFish && (
-          <CatchResultOverlay fish={currentFish} weight={caughtWeight} isNewDiscovery={isNewDiscovery} onContinue={handleContinue} />
+          currentFish.entityType === 'ai_creature'
+            ? <AICatchResultOverlay fish={currentFish} weight={caughtWeight} isNewDiscovery={isNewDiscovery} onContinue={handleContinue} />
+            : <CatchResultOverlay fish={currentFish} weight={caughtWeight} isNewDiscovery={isNewDiscovery} onContinue={handleContinue} />
         )}
         {phase === 'escaped' && <EscapeOverlay onContinue={handleContinue} />}
 
@@ -905,6 +1048,22 @@ const styles = StyleSheet.create({
     marginTop: 8, padding: 8,
     backgroundColor: PIXEL_COLORS.hudBg,
     borderWidth: 2, borderColor: PIXEL_COLORS.uiInfo + '44',
+  },
+
+  dropsRow: {
+    flexDirection: 'row' as const,
+    flexWrap: 'wrap' as const,
+    justifyContent: 'center' as const,
+    gap: 6,
+    marginTop: 8,
+  },
+  dropChip: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    backgroundColor: PIXEL_COLORS.hudBg,
+    borderWidth: 1,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
   },
 
   // Tutorial

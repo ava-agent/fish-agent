@@ -63,6 +63,23 @@ export const PIXEL_COLORS = {
   envWoodDark: '#5A3A1C',
   envSand: '#C2B280',
 
+  // AI Creature UI
+  aiPurple: '#AA66FF',
+  aiPurpleDim: '#5A3388',
+  aiPurpleGlow: '#AA66FF33',
+  aiCyan: '#44CCFF',
+  aiCyanDim: '#1A6688',
+  aiGold: '#FFD700',
+
+  // Resources
+  resourcePrompt: '#FFD700',
+  resourceParams: '#AA66FF',
+  resourceData: '#44CCFF',
+  resourceCompute: '#FF5555',
+
+  // Rarity epic (new)
+  rarityEpic: '#AA66FF',
+
   // Tab bar
   tabBg: '#0D0A14',
   tabActive: '#FFD700',
